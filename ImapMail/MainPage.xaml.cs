@@ -29,34 +29,56 @@ namespace ImapMail
 
         public ObservableCollection<MessageSummary> SummaryList { get; set; }
 
-        public ObservableCollection<MimeMessage> MailList { get; set; }
-
         public MainPage()
         {
             this.InitializeComponent();
 
-            SummaryList = MailHandler.GetMailSummaries();
-            MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);
+            HandlePreferences();
 
-            if (mail.HtmlBody != null)
-            {
-                webView.NavigateToString(mail.HtmlBody);
-            }
-            else if (mail.TextBody != null)
-            {
-                webView.NavigateToString(mail.TextBody);
-            }
+            HandleMail();
 
         }
 
+        public void HandlePreferences()
+        {
+            Windows.Storage.ApplicationDataContainer localSettings =
+                Windows.Storage.ApplicationData.Current.LocalSettings;
+            Windows.Storage.StorageFolder localFolder =
+                Windows.Storage.ApplicationData.Current.LocalFolder;
+
+            MailHandler.User = (string)localSettings.Values["user"];
+            MailHandler.Password = (string)localSettings.Values["password"];
+
+        }
+
+        /// <summary>
+        /// Logs in to mail server, gets mail summaries (headers) and sets the first mail´s content to the webview
+        /// </summary>
+        public void HandleMail()
+        {
+            MailHandler.Login();
+            SummaryList = MailHandler.GetMailSummaries();
+            MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);
+            SetContentToWebView(mail);
+        }
+
+        /// <summary>
+        /// Handles event when user clicks the listview - sets the clicked mail´s content to the webview
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MailListView_ItemClicked(object sender, ItemClickEventArgs e)
         {
             MessageSummary msg = (MessageSummary)e.ClickedItem;
 
-            Debug.WriteLine("Unique id: " + msg.UniqueId);
-
             MimeMessage mail = MailHandler.GetSpecificMail(msg.UniqueId);
 
+            SetContentToWebView(mail);
+          
+        }
+
+        public void SetContentToWebView(MimeMessage mail)
+        {
             if (mail.HtmlBody != null)
             {
                 webView.NavigateToString(mail.HtmlBody);
@@ -65,8 +87,6 @@ namespace ImapMail
             {
                 webView.NavigateToString(mail.TextBody);
             }
-
-
         }
     }
 }

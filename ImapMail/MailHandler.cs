@@ -15,35 +15,62 @@ namespace ImapMail
     public class MailHandler
     {
         private static ImapClient client;
-        private static string user = "USER";
-        private static string password = "PASSWORD";
+        internal static string User { get; set; }
+        internal static string Password { get; set; }
+        internal static bool LoggedIn {get; set; }
+
+        public static void Login()
+        {
+            if (client == null)
+            {
+                client = new ImapClient();
+
+                if (client.IsConnected == false && client.IsAuthenticated == false)
+                {
+
+                    //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                    client.Connect("imap.gmail.com", 993, true);
+
+                    //client.AuthenticationMechanisms.Remove("XOAUTH2");
+                    client.Authenticate(User, Password);
+
+                    LoggedIn = true;
+                }
+
+            }
+
+        }
+
+        public static void Logout()
+        {
+            if (client != null)
+            {
+                if (client.IsConnected == true)
+                {
+                    client.Disconnect(true);
+                    client = null;
+                    LoggedIn = false;
+                }
+            }
+
+        }
 
 
         public static ObservableCollection<MessageSummary> GetMailSummaries()
         {
+            ObservableCollection<MessageSummary> summaryList = new ObservableCollection<MessageSummary>();
 
-            ObservableCollection<MessageSummary> summaryList;
-
-            using (client = new ImapClient())
-            {
-                //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                client.Connect("imap.gmail.com", 993, true);
-
-                //client.AuthenticationMechanisms.Remove("XOAUTH2");
-
-                client.Authenticate(user, password);
-
+            if (LoggedIn == true)
+            {              
                 var inbox = client.Inbox;
                 inbox.Open(FolderAccess.ReadOnly);
 
                 //Debug.WriteLine("Total messages: {0}", inbox.Count);
-
-                summaryList = new ObservableCollection<MessageSummary>();
-
+             
                 var summaryItems = inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.UniqueId).ToList();
 
-                //Sorts messages in reverse arrival order
+                //Sorts messagesummaries in reverse arrival order
                 var orderBy = new[] { MailKit.Search.OrderBy.ReverseArrival };
                 MessageSorter.Sort(summaryItems, orderBy);
 
@@ -52,9 +79,12 @@ namespace ImapMail
                     summaryList.Add(summary);
 
                 }
-
-                //client.Disconnect(true);
-
+              
+            }
+            else
+            {
+                Login();
+                GetMailSummaries();
             }
 
             return summaryList;
@@ -62,31 +92,29 @@ namespace ImapMail
 
         public static MimeMessage GetSpecificMail(UniqueId uid)
         {
-            MimeMessage returnMail;
+            MimeMessage mail=null;
 
-            using (client = new ImapClient())
+            if (LoggedIn == true)
             {
-                //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                client.Connect("imap.gmail.com", 993, true);
-
-                //client.AuthenticationMechanisms.Remove("XOAUTH2");
-
-                client.Authenticate(user, password);
-
                 var inbox = client.Inbox;
-                inbox.Open(FolderAccess.ReadOnly);
 
-                returnMail = inbox.GetMessage(uid);
+                if (inbox.IsOpen == false)
+                {
+                    inbox.Open(FolderAccess.ReadOnly);
+                }
 
-                //client.Disconnect(true);
+                mail = inbox.GetMessage(uid);             
+            }
+            else
+            {
+                Login();
+                GetSpecificMail(uid);
             }
 
-            return returnMail;
+            return mail;
 
         }
 
-        
     }
 }
 
