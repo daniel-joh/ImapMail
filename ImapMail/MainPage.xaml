@@ -10,9 +10,18 @@
     mc:Ignorable="d">
 
 
+    <Page.TopAppBar>
+        <CommandBar>
+            <AppBarButton Name="AppBarButtonRefresh" Icon="Refresh" Label="Refresh" Click="AppBarButton_Click"></AppBarButton>
+            <AppBarButton Name="AppBarButtonCompose" Icon="Add" Label="Compose new mail" Click="AppBarButton_Click"></AppBarButton>
+            <AppBarButton Name="AppBarButtonSettings" Icon="Setting" Label="Settings" Click="AppBarButton_Click"></AppBarButton>
+        </CommandBar>
+    </Page.TopAppBar>
+
     <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal">
 
-        <ListView Name="MailListView" Width="550" ItemsSource="{x:Bind SummaryList}" Margin="20,20,0,0" 
+
+        <ListView Name="MailListView" Width="550" ItemsSource="{x:Bind SummaryList, Mode=OneWay}" Margin="20,20,20,20" 
                   ItemClick="MailListView_ItemClicked" IsItemClickEnabled="true" SelectionMode="none">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="mailkit:MessageSummary">
@@ -26,9 +35,10 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-
-        <WebView x:Name="webView" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Margin="0,0,100,0" Width="700" MinWidth="495" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                
+        <WebView x:Name="webView" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Margin="0,0,100,20" Width="700" MinWidth="495" ScrollViewer.VerticalScrollBarVisibility="Auto" />
 
     </StackPanel>
+
 </Page>
 

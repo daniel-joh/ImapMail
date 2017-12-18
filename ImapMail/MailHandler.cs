@@ -9,6 +9,7 @@ using MailKit;
 using MimeKit;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
+using MailKit.Net.Smtp;
 
 namespace ImapMail
 {
@@ -113,6 +114,34 @@ namespace ImapMail
 
             return mail;
 
+        }
+
+        public static void SendMail(string from, string to, string subject, string bodyText)
+        {
+            var message = new MimeMessage();
+      
+            message.From.Add(new MailboxAddress(from));
+            message.To.Add(new MailboxAddress(to));
+            message.Subject = subject;
+           
+            message.Body = new TextPart("plain")
+            {
+                Text = @bodyText
+            };
+
+            using (var client = new SmtpClient())
+            {
+                /* GMAIL                */          
+                client.Connect("smtp.gmail.com", 465, true);
+
+                client.AuthenticationMechanisms.Remove("XOAUTH2");        
+                client.Authenticate(User, Password);
+                
+                client.Send(message);
+                client.Disconnect(true);
+
+                Debug.WriteLine(" Mail sent!");
+            }
         }
 
     }

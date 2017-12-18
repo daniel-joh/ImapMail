@@ -37,6 +37,8 @@ namespace ImapMail
 
             HandleMail();
 
+
+
         }
 
         public void HandlePreferences()
@@ -55,10 +57,22 @@ namespace ImapMail
         /// Logs in to mail server, gets mail summaries (headers) and sets the first mail´s content to the webview
         /// </summary>
         public void HandleMail()
-        {
+        {          
             MailHandler.Login();
             SummaryList = MailHandler.GetMailSummaries();
             MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);
+            SetContentToWebView(mail);
+        }
+
+        public void RefreshMail()
+        {
+            if (SummaryList != null)
+                SummaryList.Clear();
+            //MailHandler.Login();
+            SummaryList = MailHandler.GetMailSummaries();
+
+            Bindings.Update();              //Updates the ListView data
+            MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);          
             SetContentToWebView(mail);
         }
 
@@ -73,7 +87,7 @@ namespace ImapMail
 
             MimeMessage mail = MailHandler.GetSpecificMail(msg.UniqueId);
 
-            SetContentToWebView(mail);
+            SetContentToWebView(mail);          
           
         }
 
@@ -88,5 +102,19 @@ namespace ImapMail
                 webView.NavigateToString(mail.TextBody);
             }
         }
+
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource == AppBarButtonRefresh)
+                RefreshMail();
+
+            if (e.OriginalSource == AppBarButtonSettings)
+                Debug.WriteLine("Open settings page!");
+
+            if (e.OriginalSource == AppBarButtonCompose)
+                Frame.Navigate(typeof(CreateMailPage));
+        }
+
+      
     }
 }
