@@ -1,25 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MailKit.Net.Imap;
-using MailKit.Search;
 using MailKit;
 using MimeKit;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
 using MailKit.Net.Smtp;
+using System.Globalization;
 
 namespace ImapMail
 {
     public class MailHandler
     {
         private static ImapClient client;
+
         internal static string User { get; set; }
         internal static string Password { get; set; }
-        internal static bool LoggedIn {get; set; }
+        internal static bool LoggedIn { get; set; }
+        
+        /* IMAP properties */
+        internal static string ImapHost { get; set; } = "imap.gmail.com";
+        internal static int ImapPort { get; set; } = 993;
+        internal static bool ImapUseSsl { get; set; } = true;
+        //internal static string ImapUser { get; set; }
+        //internal static string ImapPassword { get; set; }
 
+        /* SMTP properties */
+        internal static string SmtpHost { get; set; } = "smtp.gmail.com";
+        internal static int SmtpPort { get; set; } = 465;
+        internal static bool SmtpUseSsl { get; set; } = true;
+        //internal static string SmtpUser { get; set; }
+        //internal static string SmtpPassword { get; set; }
+
+        //Dictionary for attached files
+        internal static Dictionary<string, byte[]> attachedFiles { get; set; }
+
+        /// <summary>
+        /// Logs in to imap mail server
+        /// </summary>
         public static void Login()
         {
             if (client == null)
@@ -28,21 +47,22 @@ namespace ImapMail
 
                 if (client.IsConnected == false && client.IsAuthenticated == false)
                 {
-
                     //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-                    client.Connect("imap.gmail.com", 993, true);
+                    client.Connect(ImapHost, ImapPort, ImapUseSsl);
 
-                    //client.AuthenticationMechanisms.Remove("XOAUTH2");
+                    client.AuthenticationMechanisms.Remove("XOAUTH2");
                     client.Authenticate(User, Password);
 
                     LoggedIn = true;
                 }
-
             }
 
         }
 
+        /// <summary>
+        /// Logs out from imap mail server
+        /// </summary>
         public static void Logout()
         {
             if (client != null)
@@ -57,10 +77,13 @@ namespace ImapMail
 
         }
 
-
-        public static ObservableCollection<MessageSummary> GetMailSummaries()
+        /// <summary>
+        /// Gets mail headers
+        /// </summary>
+        /// <returns></returns>
+        public static ObservableCollection<MailHeader> GetMailHeaders()
         {
-            ObservableCollection<MessageSummary> summaryList = new ObservableCollection<MessageSummary>();
+            ObservableCollection<MailHeader> headerList = new ObservableCollection<MailHeader>();
 
             if (LoggedIn == true)
             {              
@@ -76,21 +99,89 @@ namespace ImapMail
                 MessageSorter.Sort(summaryItems, orderBy);
 
                 foreach (MessageSummary summary in summaryItems)
-                {
-                    summaryList.Add(summary);
-
+                {                
+                    MailHeader mailHeader=ConvertMessageSummary(summary);
+                    headerList.Add(mailHeader);
                 }
               
             }
             else
             {
                 Login();
-                GetMailSummaries();
+                GetMailHeaders();
             }
 
-            return summaryList;
+            return headerList;
         }
 
+        /// <summary>
+        /// Converts (parts of) MessageSummary to MailHeader 
+        /// </summary>
+        /// <param name="msgSum"></param>
+        /// <returns></returns>
+        public static MailHeader ConvertMessageSummary(MessageSummary msgSum)
+        {
+            MailHeader mailHeader = new MailHeader();
+
+            mailHeader.Subject = msgSum.Envelope.Subject;
+
+            InternetAddressList fromList = msgSum.Envelope.From;
+            string fromString = "";
+
+            //For all InternetAddresses in InternetAddressList, add display name (if it exists) 
+            //to the fromString, otherwise add email address
+            foreach(var from in fromList)
+            {                           
+                if (from.Name==null || from.Name.Equals(""))
+                {
+                    if (fromList.Count > 1)
+                    {
+                        fromString = from.ToString() + "," + fromString;
+                    }
+                    else
+                        fromString = from.ToString();
+                }
+                else
+                {
+                    if (fromList.Count > 1)
+                    {
+                        fromString = from.Name + "," + fromString;
+                    }
+                    else
+                        fromString = from.Name;              
+                }
+              
+            }
+
+            mailHeader.From = fromString;
+
+            string date="";
+
+            //If the message´s date is today - set date string to Hour+Minute only. Otherwise set to full date&time
+            if (msgSum.Date.Day == DateTimeOffset.Now.Day)
+            {                    
+                date = msgSum.Date.Hour + ":" + msgSum.Date.Minute;              
+            }
+            else
+            {
+                string format = "yyyy-MM-dd HH:mm";
+
+                //Formats the date to swedish culture
+                date = msgSum.Date.ToString(format, new CultureInfo("sv-SE"));
+           
+            }
+
+            mailHeader.Date = date;
+            mailHeader.UniqueId = msgSum.UniqueId;
+
+            return mailHeader;
+        }
+
+        /// <summary>
+        /// Gets a specific mail
+        /// </summary>
+        /// <param name="uid">UniqueId</param>
+        /// <returns>MimeMessage</returns>
         public static MimeMessage GetSpecificMail(UniqueId uid)
         {
             MimeMessage mail=null;
@@ -116,6 +207,13 @@ namespace ImapMail
 
         }
 
+        /// <summary>
+        /// Connects to smtp server and sends mail
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="subject"></param>
+        /// <param name="bodyText"></param>
         public static void SendMail(string from, string to, string subject, string bodyText)
         {
             var message = new MimeMessage();
@@ -123,16 +221,22 @@ namespace ImapMail
             message.From.Add(new MailboxAddress(from));
             message.To.Add(new MailboxAddress(to));
             message.Subject = subject;
-           
-            message.Body = new TextPart("plain")
-            {
-                Text = @bodyText
-            };
+
+            var builder = new BodyBuilder();
+
+            builder.TextBody = bodyText;
+
+            //Adds all attached files to the message
+            foreach (var file in attachedFiles) {
+                builder.Attachments.Add(file.Key, file.Value);
+                Debug.WriteLine(file.Key + file.Value + "\n");
+            }
+
+            message.Body = builder.ToMessageBody();
 
             using (var client = new SmtpClient())
-            {
-                /* GMAIL                */          
-                client.Connect("smtp.gmail.com", 465, true);
+            {                  
+                client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
 
                 client.AuthenticationMechanisms.Remove("XOAUTH2");        
                 client.Authenticate(User, Password);

@@ -98,7 +98,9 @@
     <Compile Include="CreateMailPage.xaml.cs">
       <DependentUpon>CreateMailPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HelperUtils.cs" />
     <Compile Include="MailHandler.cs" />
+    <Compile Include="Models\MailHeader.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

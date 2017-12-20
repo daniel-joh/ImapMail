@@ -7,6 +7,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -70,6 +71,19 @@ namespace ImapMail
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();
+
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+
+                // Set active window colors
+                titleBar.ForegroundColor = Windows.UI.Colors.White;
+                titleBar.BackgroundColor = Windows.UI.Colors.Black;
+
+                titleBar.ButtonForegroundColor = Windows.UI.Colors.White;
+                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Black;
+                titleBar.ButtonHoverForegroundColor = Windows.UI.Colors.White;
+                titleBar.ButtonHoverBackgroundColor = Windows.UI.Colors.LightBlue;
+                titleBar.ButtonPressedForegroundColor = Windows.UI.Colors.Gray;
+                titleBar.ButtonPressedBackgroundColor = Windows.UI.Colors.LightGreen;
             }
         }
 

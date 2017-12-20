@@ -16,8 +16,9 @@ using System.Diagnostics;
 using MailKit;
 using System.Collections.ObjectModel;
 using MimeKit;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 
 namespace ImapMail
 {
@@ -27,7 +28,7 @@ namespace ImapMail
     public sealed partial class MainPage : Page
     {
 
-        public ObservableCollection<MessageSummary> SummaryList { get; set; }
+        public ObservableCollection<MailHeader> MailHeaderList { get; set; }
 
         public MainPage()
         {
@@ -36,11 +37,12 @@ namespace ImapMail
             HandlePreferences();
 
             HandleMail();
-
-
-
+      
         }
 
+        /// <summary>
+        /// Handles user preferences
+        /// </summary>
         public void HandlePreferences()
         {
             Windows.Storage.ApplicationDataContainer localSettings =
@@ -57,22 +59,22 @@ namespace ImapMail
         /// Logs in to mail server, gets mail summaries (headers) and sets the first mail´s content to the webview
         /// </summary>
         public void HandleMail()
-        {          
+        {
             MailHandler.Login();
-            SummaryList = MailHandler.GetMailSummaries();
-            MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);
+            MailHeaderList = MailHandler.GetMailHeaders();
+            MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
             SetContentToWebView(mail);
         }
 
         public void RefreshMail()
         {
-            if (SummaryList != null)
-                SummaryList.Clear();
+            if (MailHeaderList != null)
+                MailHeaderList.Clear();
             //MailHandler.Login();
-            SummaryList = MailHandler.GetMailSummaries();
+            MailHeaderList = MailHandler.GetMailHeaders();
 
             Bindings.Update();              //Updates the ListView data
-            MimeMessage mail = MailHandler.GetSpecificMail(SummaryList[0].UniqueId);          
+            MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
             SetContentToWebView(mail);
         }
 
@@ -83,7 +85,7 @@ namespace ImapMail
         /// <param name="e"></param>
         private void MailListView_ItemClicked(object sender, ItemClickEventArgs e)
         {
-            MessageSummary msg = (MessageSummary)e.ClickedItem;
+            MailHeader msg = (MailHeader)e.ClickedItem;
 
             MimeMessage mail = MailHandler.GetSpecificMail(msg.UniqueId);
 
@@ -91,6 +93,10 @@ namespace ImapMail
           
         }
 
+        /// <summary>
+        /// Sets mail content (html or text depending on what´s available) to the webview
+        /// </summary>
+        /// <param name="mail"></param>
         public void SetContentToWebView(MimeMessage mail)
         {
             if (mail.HtmlBody != null)
@@ -103,6 +109,11 @@ namespace ImapMail
             }
         }
 
+        /// <summary>
+        /// Handles clicks on the appbar
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource == AppBarButtonRefresh)
@@ -112,9 +123,30 @@ namespace ImapMail
                 Debug.WriteLine("Open settings page!");
 
             if (e.OriginalSource == AppBarButtonCompose)
-                Frame.Navigate(typeof(CreateMailPage));
+                //Frame.Navigate(typeof(CreateMailPage));
+                OpenCreateMailPage();
+
+        
         }
 
-      
+        /// <summary>
+        /// Opens CreateMailPage
+        /// </summary>
+        public async void OpenCreateMailPage()
+        {
+            CoreApplicationView newView = CoreApplication.CreateNewView();
+            int newViewId = 0;
+            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Frame frame = new Frame();
+                frame.Navigate(typeof(CreateMailPage), null);
+                Window.Current.Content = frame;
+                Window.Current.Activate();         
+                newViewId = ApplicationView.GetForCurrentView().Id;
+            });
+            bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
+
+        }
+    
     }
 }

@@ -13,10 +13,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
-using MailKit;
-using MimeKit;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
+using System.Threading.Tasks;
 
 namespace ImapMail
 {
@@ -29,23 +26,48 @@ namespace ImapMail
         {
             this.InitializeComponent();
 
-            Message.Text=Environment.NewLine+Environment.NewLine+Environment.NewLine +Environment.NewLine+
-            Environment.NewLine + Environment.NewLine;
+            for (int i = 0; i < 5; i++)
+                Message.Text += Environment.NewLine;
+
+            MailHandler.attachedFiles = new Dictionary<string, byte[]>();
         }
 
-        private void SendMail_Click(object sender, RoutedEventArgs e)
+         
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Send mail button clicked");
-                     
-            MailHandler.SendMail(From.ToString(), To.ToString(), Subject.ToString(), Message.ToString());
-        }
-
-        private void CancelSend_Click(object sender, RoutedEventArgs e)
-        {
-            Debug.WriteLine("Cancel button clicked!");
-            Frame.Navigate(typeof(MainPage));
-        }
-
+            if (e.OriginalSource == AppBarButtonSendMail)
+            {
+                Debug.WriteLine("Send mail clicked");
+            
+                MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
+            }
+            else if (e.OriginalSource == AppBarButtonAttachFile)
+            {
+                Debug.WriteLine("Attach file clicked");
+                AttachFile();
+            }
        
+        }
+
+        public async void AttachFile()
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+            picker.FileTypeFilter.Add("*");
+
+            Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                byte[] byteArray= await HelperUtils.GetBytesAsync(file);
+                MailHandler.attachedFiles.Add(file.Name, byteArray);   
+                
+            }
+           
+
+        }
+
+      
+
     }
 }
