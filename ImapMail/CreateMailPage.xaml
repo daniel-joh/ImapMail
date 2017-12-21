@@ -14,12 +14,12 @@
             <AppBarButton Name="AppBarButtonAttachFile" Icon="Add" Label="Attach file" Click="AppBarButton_Click"></AppBarButton>
         </CommandBar>
 
-        <TextBox Name="From" Width="600" FontSize="11" Header="From:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="To" Width="600" FontSize="11" Header="To:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Cc" Width="600" FontSize="11" Header="Cc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Bcc" Width="600" FontSize="11" Header="Bcc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Subject" Width="600" FontSize="11" Header="Subject:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Message" FontSize="11" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="140" MinHeight="140" 
+        <TextBox Name="From" Width="600" FontSize="12" Header="From:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="To" Width="600" FontSize="12" Header="To:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Cc" Width="600" FontSize="12" Header="Cc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Bcc" Width="600" FontSize="12" Header="Bcc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Subject" Width="600" FontSize="12" Header="Subject:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Message" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="140" MinHeight="140" 
                  ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" Margin="40,5,40,30" VerticalAlignment="Top"/>
         
     </StackPanel>

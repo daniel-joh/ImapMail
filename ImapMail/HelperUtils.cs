@@ -8,6 +8,21 @@ namespace ImapMail
 {
     static class HelperUtils
     {
+        /// <summary>
+        /// Simple method to determine if user settings has been set
+        /// </summary>
+        /// <returns></returns>
+        public static bool AreSettingsAvailable()
+        {
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+
+            //Needs only to check one value
+            if (localSettings.Values["imapHost"] != null)
+                return true;
+            else
+                return false;
+
+        }
 
         public static async Task<byte[]> GetBytesAsync(Windows.Storage.StorageFile file)
         {

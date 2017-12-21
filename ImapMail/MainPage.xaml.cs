@@ -33,25 +33,54 @@ namespace ImapMail
         public MainPage()
         {
             this.InitializeComponent();
-
-            HandlePreferences();
-
-            HandleMail();
-      
+     
+            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
         }
 
-        /// <summary>
-        /// Handles user preferences
-        /// </summary>
-        public void HandlePreferences()
-        {
-            Windows.Storage.ApplicationDataContainer localSettings =
-                Windows.Storage.ApplicationData.Current.LocalSettings;
-            Windows.Storage.StorageFolder localFolder =
-                Windows.Storage.ApplicationData.Current.LocalFolder;
+        void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {          
+            if (!HelperUtils.AreSettingsAvailable())
+            {                              
+                Frame.Navigate(typeof(SettingsPage));
+            }
+            else
+            {                
+                LoadSettings();
 
-            MailHandler.User = (string)localSettings.Values["user"];
-            MailHandler.Password = (string)localSettings.Values["password"];
+                HandleMail();
+            }
+        }
+
+
+
+        public void LoadSettings()
+        {
+            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+
+            MailHandler.ImapHost = (string)localSettings.Values["imapHost"];
+
+            string tempImapPort= (string)localSettings.Values["imapPort"];
+            MailHandler.ImapPort = int.Parse(tempImapPort);
+            
+            MailHandler.ImapUser = (string)localSettings.Values["imapUser"];
+            MailHandler.ImapPassword = (string)localSettings.Values["imapPassword"];
+
+            string tempImapSsl= (string)localSettings.Values["imapSsl"];
+            MailHandler.ImapUseSsl = bool.Parse(tempImapSsl);
+
+            MailHandler.SmtpHost = (string)localSettings.Values["smtpHost"];
+
+            string tempSmtpPort = (string)localSettings.Values["smtpPort"];
+            MailHandler.SmtpPort = int.Parse(tempSmtpPort);
+
+            MailHandler.SmtpUser = (string)localSettings.Values["smtpUser"];
+            MailHandler.SmtpPassword = (string)localSettings.Values["smtpPassword"];
+
+            string tempSmtpSsl = (string)localSettings.Values["smtpSsl"];
+            MailHandler.SmtpUseSsl = bool.Parse(tempSmtpSsl);
+
+            string tempSmtpAuth = (string)localSettings.Values["smtpAuth"];
+            MailHandler.SmtpAuth = bool.Parse(tempSmtpAuth);         
 
         }
 
@@ -62,15 +91,17 @@ namespace ImapMail
         {
             MailHandler.Login();
             MailHeaderList = MailHandler.GetMailHeaders();
+            Bindings.Update();          
             MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
             SetContentToWebView(mail);
+
         }
 
         public void RefreshMail()
         {
             if (MailHeaderList != null)
                 MailHeaderList.Clear();
-            //MailHandler.Login();
+           
             MailHeaderList = MailHandler.GetMailHeaders();
 
             Bindings.Update();              //Updates the ListView data
@@ -120,13 +151,11 @@ namespace ImapMail
                 RefreshMail();
 
             if (e.OriginalSource == AppBarButtonSettings)
-                Debug.WriteLine("Open settings page!");
+                Frame.Navigate(typeof(SettingsPage));
 
-            if (e.OriginalSource == AppBarButtonCompose)
-                //Frame.Navigate(typeof(CreateMailPage));
+                if (e.OriginalSource == AppBarButtonCompose)              
                 OpenCreateMailPage();
-
-        
+      
         }
 
         /// <summary>

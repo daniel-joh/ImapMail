@@ -15,23 +15,22 @@ namespace ImapMail
     {
         private static ImapClient client;
 
-        internal static string User { get; set; }
-        internal static string Password { get; set; }
         internal static bool LoggedIn { get; set; }
         
         /* IMAP properties */
-        internal static string ImapHost { get; set; } = "imap.gmail.com";
-        internal static int ImapPort { get; set; } = 993;
-        internal static bool ImapUseSsl { get; set; } = true;
-        //internal static string ImapUser { get; set; }
-        //internal static string ImapPassword { get; set; }
+        internal static string ImapHost { get; set; }
+        internal static int ImapPort { get; set; } 
+        internal static bool ImapUseSsl { get; set; } 
+        internal static string ImapUser { get; set; }
+        internal static string ImapPassword { get; set; }
 
         /* SMTP properties */
-        internal static string SmtpHost { get; set; } = "smtp.gmail.com";
-        internal static int SmtpPort { get; set; } = 465;
-        internal static bool SmtpUseSsl { get; set; } = true;
-        //internal static string SmtpUser { get; set; }
-        //internal static string SmtpPassword { get; set; }
+        internal static string SmtpHost { get; set; } 
+        internal static int SmtpPort { get; set; } 
+        internal static bool SmtpUseSsl { get; set; } 
+        internal static bool SmtpAuth { get; set; } 
+        internal static string SmtpUser { get; set; }
+        internal static string SmtpPassword { get; set; }
 
         //Dictionary for attached files
         internal static Dictionary<string, byte[]> attachedFiles { get; set; }
@@ -52,7 +51,7 @@ namespace ImapMail
                     client.Connect(ImapHost, ImapPort, ImapUseSsl);
 
                     client.AuthenticationMechanisms.Remove("XOAUTH2");
-                    client.Authenticate(User, Password);
+                    client.Authenticate(ImapUser, ImapPassword);
 
                     LoggedIn = true;
                 }
@@ -225,11 +224,15 @@ namespace ImapMail
             var builder = new BodyBuilder();
 
             builder.TextBody = bodyText;
-
-            //Adds all attached files to the message
-            foreach (var file in attachedFiles) {
-                builder.Attachments.Add(file.Key, file.Value);
-                Debug.WriteLine(file.Key + file.Value + "\n");
+           
+            if (attachedFiles.Count != 0)
+            {
+                //Adds all attached files to the message
+                foreach (var file in attachedFiles)
+                {
+                    builder.Attachments.Add(file.Key, file.Value);
+                    Debug.WriteLine(file.Key + file.Value + "\n");
+                }
             }
 
             message.Body = builder.ToMessageBody();
@@ -238,8 +241,13 @@ namespace ImapMail
             {                  
                 client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
 
-                client.AuthenticationMechanisms.Remove("XOAUTH2");        
-                client.Authenticate(User, Password);
+                client.AuthenticationMechanisms.Remove("XOAUTH2");
+
+                //If smtp authentication is required
+                if (SmtpAuth == true)
+                {
+                    client.Authenticate(SmtpUser, SmtpPassword);
+                }
                 
                 client.Send(message);
                 client.Disconnect(true);
