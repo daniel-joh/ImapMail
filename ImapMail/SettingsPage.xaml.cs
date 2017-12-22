@@ -34,75 +34,120 @@ namespace ImapMail
             }
         }
 
+        
+        private void CheckSmtpAuth_Checked(object sender, RoutedEventArgs e)
+        {                                                        
+                txtSmtpUser.IsEnabled = true;
+                txtSmtpPassword.IsEnabled = true;            
+        }
+      
+        private void CheckSmtpAuth_Unchecked(object sender, RoutedEventArgs e)
+        {              
+                txtSmtpUser.IsEnabled = false;
+                txtSmtpPassword.IsEnabled = false;
+        }
+
+        /// <summary>
+        /// Loads user settings from Windows.Storage.ApplicationData.Current.LocalSettings into UI
+        /// </summary>
         public void LoadSettings()
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-          
+
             txtImapHost.Text = (string)localSettings.Values["imapHost"];
             txtImapPort.Text = (string)localSettings.Values["imapPort"];
             txtImapUser.Text = (string)localSettings.Values["imapUser"];
-            txtImapPassword.Text = (string)localSettings.Values["imapPassword"];
+            txtImapPassword.Password = (string)localSettings.Values["imapPassword"];
 
-            //Need to set these values also..
-            //checkImapSsl.Text = (string)localSettings.Values["imapSsl"];
-            //checkSmtpSsl.Text = (string)localSettings.Values["smtpSsl"];
-            //checkSmtpAuth.Text = (string)localSettings.Values["smtpAuth"];
+            string tempImapSsl = (string)localSettings.Values["imapSsl"];
+            if (tempImapSsl.Equals("true"))
+            {
+                checkImapSsl.IsChecked = true;
+            }
+            else
+            {
+                checkImapSsl.IsChecked = false;
+            }
+
+            string tempSmtpSsl = (string)localSettings.Values["smtpSsl"];
+            if (tempSmtpSsl.Equals("true"))
+            {
+                checkSmtpSsl.IsChecked = true;
+            }
+            else 
+            {
+                checkSmtpSsl.IsChecked = false;
+            }
+
+            string tempSmtpAuth = (string)localSettings.Values["smtpAuth"];
+            if (tempSmtpAuth.Equals("true"))
+            {
+               checkSmtpAuth.IsChecked = true;
+            }
+            else
+            {
+                checkSmtpAuth.IsChecked = false;
+            }         
 
             txtSmtpHost.Text = (string)localSettings.Values["smtpHost"];
             txtSmtpPort.Text = (string)localSettings.Values["smtpPort"];
             txtSmtpUser.Text = (string)localSettings.Values["smtpUser"];
-            txtSmtpPassword.Text = (string)localSettings.Values["smtpPassword"];
-     
+            txtSmtpPassword.Password = (string)localSettings.Values["smtpPassword"];
+          
+            //If smtp authentication is disabled, the txtSmtpUser and txtSmtpPassword textboxes should be disabled
+            if (tempSmtpAuth.Equals("false"))
+            {           
+                txtSmtpUser.IsEnabled = false;
+                txtSmtpPassword.IsEnabled = false;              
+            }
+
         }
 
         /// <summary>
         /// Saves values from UI to Windows.Storage.ApplicationData.Current.LocalSettings and MailHandler properties
         /// </summary>
         public bool SaveSettings()
-        {           
-
-            if ((bool)!checkSmtpAuth.IsChecked)
-            {
-                //Note: Should disable these textboxes:
-
-                //txtSmtpUser
-                //txtSmtpPassword
-
-            }
+        {
 
             if (txtImapHost.Text.Equals(""))
-            {
-                Debug.WriteLine("Imap host empty!");
+            {             
+                DisplayFailedSaveDialog("IMAP host empty.");
+                txtImapHost.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (txtImapPort.Text.Equals(""))
-            {
-                Debug.WriteLine("Imap port empty!");
+            {             
+                DisplayFailedSaveDialog("IMAP port empty.");
+                txtImapPort.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (txtImapUser.Text.Equals(""))
             {
-                Debug.WriteLine("Imap user empty!");
+                DisplayFailedSaveDialog("IMAP user empty.");
+                txtImapUser.Focus(FocusState.Programmatic);
                 return false;
             }
 
-            if (txtImapPassword.Text.Equals(""))
+            if (txtImapPassword.Password.Equals(""))
             {
-                Debug.WriteLine("Imap password empty!");
+                DisplayFailedSaveDialog("IMAP password empty.");
+                txtImapPassword.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (txtSmtpHost.Text.Equals(""))
             {
-                Debug.WriteLine("Smtp host empty!");
+                DisplayFailedSaveDialog("SMTP host empty.");
+                txtSmtpHost.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (txtSmtpPort.Text.Equals(""))
             {
-                Debug.WriteLine("Smtp port empty!");
+                DisplayFailedSaveDialog("SMTP port empty.");
+                txtSmtpPort.Focus(FocusState.Programmatic);
                 return false;
             }
 
@@ -111,26 +156,28 @@ namespace ImapMail
             {
                 if (txtSmtpUser.Text.Equals(""))
                 {
-                    Debug.WriteLine("Smtp user empty!");
+                    DisplayFailedSaveDialog("SMTP username empty.");
+                    txtSmtpUser.Focus(FocusState.Programmatic);
                     return false;
                 }
 
-                if (txtSmtpPassword.Text.Equals(""))
+                if (txtSmtpPassword.Password.Equals(""))
                 {
-                    Debug.WriteLine("Smtp password empty!");
+                    DisplayFailedSaveDialog("SMTP password empty.");
+                    txtSmtpPassword.Focus(FocusState.Programmatic);
                     return false;
                 }
             }
 
             /* Sets LocalSettings */
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-               
+
             localSettings.Values["imapHost"] = txtImapHost.Text;
             localSettings.Values["imapPort"] = txtImapPort.Text;
             localSettings.Values["imapUser"] = txtImapUser.Text;
-            localSettings.Values["imapPassword"] = txtImapPassword.Text;
+            localSettings.Values["imapPassword"] = txtImapPassword.Password;
 
-            bool tempImapSsl=(bool)checkImapSsl.IsChecked;
+            bool tempImapSsl = (bool)checkImapSsl.IsChecked;
             localSettings.Values["imapSsl"] = tempImapSsl.ToString().ToLower();
 
             localSettings.Values["smtpHost"] = txtSmtpHost.Text;
@@ -140,13 +187,13 @@ namespace ImapMail
             localSettings.Values["smtpAuth"] = tempSmtpAuth.ToString().ToLower();
 
             localSettings.Values["smtpUser"] = txtSmtpUser.Text;
-            localSettings.Values["smtpPassword"] = txtSmtpPassword.Text;
-       
+            localSettings.Values["smtpPassword"] = txtSmtpPassword.Password;
+
             bool tempSmtpSsl = (bool)checkSmtpSsl.IsChecked;
             localSettings.Values["smtpSsl"] = tempSmtpSsl.ToString().ToLower();
 
             /* Sets MailHandler properties */
-            MailHandler.ImapHost= txtImapHost.Text;
+            MailHandler.ImapHost = txtImapHost.Text;
 
             try
             {
@@ -158,13 +205,13 @@ namespace ImapMail
                 Debug.WriteLine("User entered incorrect value for port!");
                 return false;
             }
-          
-            MailHandler.ImapUser= txtImapUser.Text;
-            MailHandler.ImapPassword = txtImapPassword.Text;
-            MailHandler.ImapUseSsl = (bool)checkImapSsl.IsChecked;               
-            MailHandler.SmtpHost = txtSmtpHost.Text;                  
+
+            MailHandler.ImapUser = txtImapUser.Text;
+            MailHandler.ImapPassword = txtImapPassword.Password;
+            MailHandler.ImapUseSsl = (bool)checkImapSsl.IsChecked;
+            MailHandler.SmtpHost = txtSmtpHost.Text;
             MailHandler.SmtpUser = txtSmtpUser.Text;
-            MailHandler.SmtpPassword = txtSmtpPassword.Text;
+            MailHandler.SmtpPassword = txtSmtpPassword.Password;
             MailHandler.SmtpAuth = (bool)checkSmtpAuth.IsChecked;
             MailHandler.SmtpUseSsl = (bool)checkSmtpSsl.IsChecked;
 
@@ -172,17 +219,15 @@ namespace ImapMail
 
         }
 
-        //Dialogs need to be added..
         private void OnSaveButtonClick(object sender, RoutedEventArgs e)
         {
             if (!SaveSettings())
             {
-               
-                Debug.WriteLine("Save failed. Try again!");
+                //DisplayFailedSaveDialog("test");
             }
             else
             {
-                Debug.WriteLine("Settings saved!!");
+                DisplaySaveSuccessDialog();
 
                 Debug.WriteLine(MailHandler.ImapHost);
                 Debug.WriteLine(MailHandler.ImapPort);
@@ -198,7 +243,30 @@ namespace ImapMail
                 Debug.WriteLine(MailHandler.SmtpUseSsl);
             }
 
-                  
+        }
+
+        private async void DisplayFailedSaveDialog(string message)
+        {
+            ContentDialog failedSaveDialog = new ContentDialog
+            {
+                Title = "Save failed",
+                Content = message + " Try again!",
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await failedSaveDialog.ShowAsync();
+        }
+
+        private async void DisplaySaveSuccessDialog()
+        {
+            ContentDialog saveSuccessDialog = new ContentDialog
+            {
+                Title = "Save was successful",
+                Content = "Settings saved!",
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await saveSuccessDialog.ShowAsync();
         }
     }
 }

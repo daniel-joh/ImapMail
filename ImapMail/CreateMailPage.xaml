@@ -9,7 +9,7 @@
 
     <StackPanel Orientation="Vertical" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,40">
 
-        <CommandBar Background="CornflowerBlue">
+        <CommandBar>
             <AppBarButton Name="AppBarButtonSendMail" Icon="Send" Label="Send mail" Click="AppBarButton_Click"></AppBarButton>
             <AppBarButton Name="AppBarButtonAttachFile" Icon="Add" Label="Attach file" Click="AppBarButton_Click"></AppBarButton>
         </CommandBar>
@@ -21,6 +21,6 @@
         <TextBox Name="Subject" Width="600" FontSize="12" Header="Subject:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="Message" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="140" MinHeight="140" 
                  ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" Margin="40,5,40,30" VerticalAlignment="Top"/>
-        
+
     </StackPanel>
 </Page>

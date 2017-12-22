@@ -5,8 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -51,7 +53,6 @@ namespace ImapMail
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
-                rootFrame.Navigated += OnNavigated;
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
@@ -61,14 +62,6 @@ namespace ImapMail
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
 
-                // Register a handler for BackRequested events and set the
-                // visibility of the Back button
-                SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
-
-                SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
-                    rootFrame.CanGoBack ?
-                    AppViewBackButtonVisibility.Visible :
-                    AppViewBackButtonVisibility.Collapsed;
             }
 
             if (e.PrelaunchActivated == false)
@@ -78,7 +71,7 @@ namespace ImapMail
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    rootFrame.Navigate(typeof(AppRoot), e.Arguments);
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();
@@ -86,7 +79,7 @@ namespace ImapMail
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
 
                 // Set active window colors
-                titleBar.ForegroundColor = Windows.UI.Colors.White;
+                /*titleBar.ForegroundColor = Windows.UI.Colors.White;
                 titleBar.BackgroundColor = Windows.UI.Colors.Black;
 
                 titleBar.ButtonForegroundColor = Windows.UI.Colors.White;
@@ -94,9 +87,15 @@ namespace ImapMail
                 titleBar.ButtonHoverForegroundColor = Windows.UI.Colors.White;
                 titleBar.ButtonHoverBackgroundColor = Windows.UI.Colors.LightBlue;
                 titleBar.ButtonPressedForegroundColor = Windows.UI.Colors.Gray;
-                titleBar.ButtonPressedBackgroundColor = Windows.UI.Colors.LightGreen;
+                titleBar.ButtonPressedBackgroundColor = Windows.UI.Colors.LightGreen;*/
 
-               
+                //draw into the title bar
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+
+                //remove the solid-colored backgrounds behind the caption controls and system back button             
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+
             }
         }
 
@@ -124,25 +123,6 @@ namespace ImapMail
             deferral.Complete();
         }
 
-        private void OnNavigated(object sender, NavigationEventArgs e)
-        {
-            // Each time a navigation event occurs, update the Back button's visibility
-            Windows.UI.Core.SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
-                ((Frame)sender).CanGoBack ?
-                AppViewBackButtonVisibility.Visible :
-                AppViewBackButtonVisibility.Collapsed;
-        }
-
-        private void OnBackRequested(object sender, BackRequestedEventArgs e)
-        {
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            if (rootFrame.CanGoBack)
-            {
-                e.Handled = true;
-                rootFrame.GoBack();
-            }
-        }
     }
 }
 

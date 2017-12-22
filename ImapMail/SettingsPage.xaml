@@ -8,7 +8,7 @@
     mc:Ignorable="d">
 
     <ScrollViewer>
-    <StackPanel Orientation="Vertical" >
+        <StackPanel Orientation="Vertical" >
 
             <TextBlock Name="txtImap"  Text="IMAP SETTINGS" FontWeight="Bold" FontSize="14"   TextWrapping="Wrap"  Margin="20,20,20,0"/>
 
@@ -17,9 +17,9 @@
             <TextBox Name="txtImapPort" Header="Port:"  FontSize="12" Width="400" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="20,20,0,0"/>
 
             <TextBox Name="txtImapUser" Header="Username:" FontSize="12"  Width="400" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="20,20,0,0"/>
-
-            <TextBox Name="txtImapPassword" Header="Password:"  FontSize="12"  Width="400" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="20,20,0,0"  />
-
+          
+            <PasswordBox Name="txtImapPassword" Header="Password:" FontSize="12" Width="400" HorizontalAlignment="Left" Margin="20,20,0,0" MaxLength="30"/>
+            
             <CheckBox Name="checkImapSsl" FontSize="12" Content="Use SSL?"  Margin="20,20,0,0"/>
 
 
@@ -29,16 +29,16 @@
 
             <TextBox Name="txtSmtpPort" Header="Port:"  FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,20,0,0"/>
 
-            <CheckBox Name="checkSmtpAuth" Content="Authentication required?" FontSize="12"  HorizontalAlignment="Left" Margin="20,10,0,0" />
+            <CheckBox Name="checkSmtpAuth" Checked="CheckSmtpAuth_Checked" Unchecked="CheckSmtpAuth_Unchecked" Content="Authentication required?" FontSize="12"  HorizontalAlignment="Left" Margin="20,10,0,0" />
 
             <TextBox Name="txtSmtpUser" Header="Username:" FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,20,0,0"/>
 
-            <TextBox Name="txtSmtpPassword" Header="Password:"  FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,20,0,0"/>
+            <PasswordBox Name="txtSmtpPassword" Header="Password:" FontSize="12" Width="400" HorizontalAlignment="Left" Margin="20,20,0,0" MaxLength="30"/>
 
             <CheckBox Name="checkSmtpSsl" Content="Use SSL?" FontSize="12"  HorizontalAlignment="Left" Margin="20,10,0,0" />
 
             <Button Name="btnSave" Content="Save settings" Click="OnSaveButtonClick" HorizontalAlignment="Left" Margin="20,20,20,20"/>
 
         </StackPanel>
- </ScrollViewer>
+    </ScrollViewer>
 </Page>

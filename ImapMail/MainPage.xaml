@@ -7,34 +7,27 @@
     xmlns:local="using:ImapMail"
     mc:Ignorable="d">
 
-    <Page.TopAppBar>
-        <CommandBar Background="CornflowerBlue" >
-            <AppBarButton Name="AppBarButtonRefresh" Icon="Refresh" Label="Refresh" Click="AppBarButton_Click"></AppBarButton>
-            <AppBarButton Name="AppBarButtonCompose" Icon="Mail" Label="Compose new mail" Click="AppBarButton_Click"></AppBarButton>
-            <AppBarButton Name="AppBarButtonSettings" Icon="Setting" Label="Settings" Click="AppBarButton_Click"></AppBarButton>
-        </CommandBar>
-    </Page.TopAppBar>
 
-    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal">
+    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal" Margin="0,30,0,0">
 
-        <ListView Name="MailListView" Width="450" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" Margin="20,20,20,20" 
+
+        <ListView Name="MailListView" Width="340" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" Margin="10,0,20,20" 
                   ItemClick="MailListView_ItemClicked" IsItemClickEnabled="true" SelectionMode="none" BorderBrush="Transparent" BorderThickness="0.5">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:MailHeader">
                     <StackPanel Orientation="Vertical" Margin="0,0,0,25" >
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Name="Sender" FontSize="16"  Text="{x:Bind From}" FontWeight="Bold" ></TextBlock>
-                            <TextBlock Name="Date" FontSize="16" Margin="15,0,0,0" Text="{x:Bind Date}" TextAlignment="Right"></TextBlock>
-                        </StackPanel>
+                        <TextBlock Name="From" FontSize="18"  Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
                         <TextBlock Name="Subject" FontSize="16" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
+                        <TextBlock Name="Date" FontSize="15"  Text="{x:Bind Date}" ></TextBlock>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
 
-        <StackPanel Orientation="Horizontal" BorderBrush="Black" BorderThickness="1" Margin="20,20,20,20">
-          
-            <WebView x:Name="webView" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Margin="20,20,20,20" Width="700" MinWidth="500" 
+
+        <StackPanel Orientation="Horizontal" BorderBrush="Black" BorderThickness="0.5" Margin="20,0,0,20">
+
+            <WebView x:Name="webView" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Margin="20,20,0,20"  MinWidth="500" Width="600"
                       ScrollViewer.VerticalScrollBarVisibility="Auto" />
         </StackPanel>
     </StackPanel>

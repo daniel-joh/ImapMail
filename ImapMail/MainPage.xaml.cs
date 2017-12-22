@@ -33,25 +33,12 @@ namespace ImapMail
         public MainPage()
         {
             this.InitializeComponent();
-     
-            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
+
+            LoadSettings();
+
+            HandleMail();
+
         }
-
-        void MainPage_Loaded(object sender, RoutedEventArgs e)
-        {          
-            if (!HelperUtils.AreSettingsAvailable())
-            {                              
-                Frame.Navigate(typeof(SettingsPage));
-            }
-            else
-            {                
-                LoadSettings();
-
-                HandleMail();
-            }
-        }
-
-
 
         public void LoadSettings()
         {
@@ -59,13 +46,13 @@ namespace ImapMail
 
             MailHandler.ImapHost = (string)localSettings.Values["imapHost"];
 
-            string tempImapPort= (string)localSettings.Values["imapPort"];
+            string tempImapPort = (string)localSettings.Values["imapPort"];
             MailHandler.ImapPort = int.Parse(tempImapPort);
-            
+
             MailHandler.ImapUser = (string)localSettings.Values["imapUser"];
             MailHandler.ImapPassword = (string)localSettings.Values["imapPassword"];
 
-            string tempImapSsl= (string)localSettings.Values["imapSsl"];
+            string tempImapSsl = (string)localSettings.Values["imapSsl"];
             MailHandler.ImapUseSsl = bool.Parse(tempImapSsl);
 
             MailHandler.SmtpHost = (string)localSettings.Values["smtpHost"];
@@ -80,7 +67,7 @@ namespace ImapMail
             MailHandler.SmtpUseSsl = bool.Parse(tempSmtpSsl);
 
             string tempSmtpAuth = (string)localSettings.Values["smtpAuth"];
-            MailHandler.SmtpAuth = bool.Parse(tempSmtpAuth);         
+            MailHandler.SmtpAuth = bool.Parse(tempSmtpAuth);
 
         }
 
@@ -91,7 +78,7 @@ namespace ImapMail
         {
             MailHandler.Login();
             MailHeaderList = MailHandler.GetMailHeaders();
-            Bindings.Update();          
+            Bindings.Update();
             MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
             SetContentToWebView(mail);
 
@@ -101,7 +88,7 @@ namespace ImapMail
         {
             if (MailHeaderList != null)
                 MailHeaderList.Clear();
-           
+
             MailHeaderList = MailHandler.GetMailHeaders();
 
             Bindings.Update();              //Updates the ListView data
@@ -120,8 +107,8 @@ namespace ImapMail
 
             MimeMessage mail = MailHandler.GetSpecificMail(msg.UniqueId);
 
-            SetContentToWebView(mail);          
-          
+            SetContentToWebView(mail);
+
         }
 
         /// <summary>
@@ -140,42 +127,7 @@ namespace ImapMail
             }
         }
 
-        /// <summary>
-        /// Handles clicks on the appbar
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (e.OriginalSource == AppBarButtonRefresh)
-                RefreshMail();
 
-            if (e.OriginalSource == AppBarButtonSettings)
-                Frame.Navigate(typeof(SettingsPage));
 
-                if (e.OriginalSource == AppBarButtonCompose)              
-                OpenCreateMailPage();
-      
-        }
-
-        /// <summary>
-        /// Opens CreateMailPage
-        /// </summary>
-        public async void OpenCreateMailPage()
-        {
-            CoreApplicationView newView = CoreApplication.CreateNewView();
-            int newViewId = 0;
-            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                Frame frame = new Frame();
-                frame.Navigate(typeof(CreateMailPage), null);
-                Window.Current.Content = frame;
-                Window.Current.Activate();         
-                newViewId = ApplicationView.GetForCurrentView().Id;
-            });
-            bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
-
-        }
-    
     }
 }

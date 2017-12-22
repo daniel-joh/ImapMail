@@ -1,0 +1,38 @@
+﻿<Page
+    x:Class="ImapMail.AppRoot"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ImapMail"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:appmodel="using:Windows.ApplicationModel">
+  
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <TextBlock x:Name="AppTitle" Style="{StaticResource CaptionTextBlockStyle}" 
+           Text="{x:Bind appmodel:Package.Current.DisplayName}" Margin="12" IsHitTestVisible="False"/>
+
+        <NavigationView x:Name="NavView"  OpenPaneLength="200" ItemInvoked="NavView_ItemInvoked"
+                    SelectionChanged="NavView_SelectionChanged"
+                    Loaded="NavView_Loaded" AlwaysShowHeader="false">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Home" Tag="home">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE10F;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Icon="Mail"  Content="Mail" Tag="mail"/>
+            </NavigationView.MenuItems>
+
+            <Frame x:Name="ContentFrame" Margin="12">
+                <Frame.ContentTransitions>
+                    <TransitionCollection>
+                        <NavigationThemeTransition/>
+                    </TransitionCollection>
+                </Frame.ContentTransitions>
+            </Frame>
+
+
+        </NavigationView>
+    </Grid>
+</Page>

@@ -32,13 +32,13 @@ namespace ImapMail
             MailHandler.attachedFiles = new Dictionary<string, byte[]>();
         }
 
-         
+
         private void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource == AppBarButtonSendMail)
             {
                 Debug.WriteLine("Send mail clicked");
-            
+
                 MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
             }
             else if (e.OriginalSource == AppBarButtonAttachFile)
@@ -46,7 +46,7 @@ namespace ImapMail
                 Debug.WriteLine("Attach file clicked");
                 AttachFile();
             }
-       
+
         }
 
         public async void AttachFile()
@@ -59,15 +59,15 @@ namespace ImapMail
             Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
             if (file != null)
             {
-                byte[] byteArray= await HelperUtils.GetBytesAsync(file);
-                MailHandler.attachedFiles.Add(file.Name, byteArray);   
-                
+                byte[] byteArray = await HelperUtils.GetBytesAsync(file);
+                MailHandler.attachedFiles.Add(file.Name, byteArray);
+
             }
-           
+
 
         }
 
-      
+
 
     }
 }
