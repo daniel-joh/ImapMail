@@ -14,20 +14,20 @@
         </Grid.ColumnDefinitions>
 
         <ScrollViewer>
-        <Grid Grid.Column="0" Margin="5, 25, 25, 10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
+            <Grid Grid.Column="0" Margin="5, 25, 15, 10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
 
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
 
-            </Grid.ColumnDefinitions>
+                </Grid.ColumnDefinitions>
 
-            <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
                     <CommandBar.PrimaryCommands>
                         <AppBarButton HorizontalAlignment="Left" Name="AppBarButtonRefreshMail" Icon="Refresh" Label="Refresh mail" 
@@ -48,15 +48,22 @@
                     </CommandBar.Content>
                 </CommandBar>
 
-                <ListView  Name="MailListView" Width="340" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" Margin="10,55,20,20" 
-                  ItemClick="MailListView_ItemClicked" IsItemClickEnabled="true" SelectionMode="none" BorderBrush="Transparent" BorderThickness="0.5">
+                <ListView Name="MailListView" Width="340" Height="Auto" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" 
+                           Margin="10,55,20,20" ItemClick="MailListView_ItemClicked" 
+                           IsItemClickEnabled="true"  SelectionMode="none"  
+                           BorderThickness="0.5"  >
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:MailHeader">
-                            <StackPanel Orientation="Vertical" Margin="0,0,0,25" >
-                                <TextBlock Name="From" FontSize="18"  Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
-                                <TextBlock Name="Subject" FontSize="16" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
-                                <TextBlock Name="Date" FontSize="15"  Text="{x:Bind Date}" ></TextBlock>
-                            </StackPanel>
+                            <Grid  Margin="0,0,0,25">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <TextBlock Name="From" FontSize="18"  Grid.Row="0" Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
+                                <TextBlock Name="Subject" FontSize="16" Grid.Row="1" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
+                                <TextBlock Name="Date" FontSize="15"  Grid.Row="2" Text="{x:Bind Date}" ></TextBlock>
+                            </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>

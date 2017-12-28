@@ -15,6 +15,8 @@ using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using MimeKit;
+using System.Collections.ObjectModel;
+using Windows.Storage.FileProperties;
 
 namespace ImapMail
 {
@@ -23,6 +25,10 @@ namespace ImapMail
     /// </summary>
     public sealed partial class CreateMailPage : Page
     {
+        ObservableCollection<AttachedFile> FileList { get; set; }
+
+        int SelectedIndex { get; set; }
+
         public CreateMailPage()
         {
             this.InitializeComponent();
@@ -34,16 +40,17 @@ namespace ImapMail
 
             MailHandler.attachedFiles = new Dictionary<string, byte[]>();
 
+            FileList = new ObservableCollection<AttachedFile>();
+
         }
 
         void CreateMailPage_Loaded(object sender, RoutedEventArgs e)
         {
             InitUi();
-
         }
 
         private void InitUi()
-        {
+        {          
             From.Text = MailHandler.UserEmail;
 
             //If the user has clicked Reply
@@ -82,7 +89,6 @@ namespace ImapMail
                 Subject.Text = message.Subject;
 
                 Message.Text = message.TextBody;
-
             }
         }
 
@@ -101,11 +107,30 @@ namespace ImapMail
 
         private void HandleSendingMail()
         {
+            if (To.Text==null || To.Text.Equals(""))
+            {
+                DisplayMissingInformationDialog("To field empty.");
+                To.Focus(FocusState.Programmatic);
+                return;
+            }
+
             //Add success/failure code
             if (MailHandler.ReplyFlag == true)
                 MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Subject.Text, Message.Text);
             else
                 MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
+        }
+
+        private async void DisplayMissingInformationDialog(string message)
+        {
+            ContentDialog missingInformationDialog = new ContentDialog
+            {
+                Title = "Missing information",
+                Content = message + " Try again!",
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await missingInformationDialog.ShowAsync();
         }
 
         private async void DisplaySendSuccessDialog()
@@ -142,11 +167,42 @@ namespace ImapMail
             Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
             if (file != null)
             {
+                //For use when sending the mail (adds file to the list of attached files)
                 byte[] byteArray = await HelperUtils.GetBytesAsync(file);
                 MailHandler.attachedFiles.Add(file.Name, byteArray);
 
-            }
+                //Adds AttachedFile for displaying in the GridView
+                FileList.Add(new AttachedFile
+                {
+                    FileName = file.Name,
+                    Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView)                  
+                });
 
+                txtAttachedFiles.Text = "Attached files:";
+            }
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {        
+            this.AttachedFilesListView.ItemsSource = FileList;
+        }
+
+        private void ListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+
+            SelectedIndex= AttachedFilesListView.SelectedIndex;                    
+        }
+
+        private void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedIndex != -1)
+            {
+                string fileName = FileList[SelectedIndex].FileName;
+                FileList.RemoveAt(SelectedIndex);
+
+                MailHandler.attachedFiles.Remove(fileName);
+            }     
         }
 
     }

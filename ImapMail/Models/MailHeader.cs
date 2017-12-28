@@ -14,7 +14,5 @@ namespace ImapMail
         public string Date { get; set; }
         public UniqueId UniqueId { get; set; }
 
-
     }
-
 }

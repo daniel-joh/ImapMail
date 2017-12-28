@@ -23,15 +23,12 @@ using System.Globalization;
 
 namespace ImapMail
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
+   
     public sealed partial class MainPage : Page
     {
 
         public ObservableCollection<MailHeader> MailHeaderList { get; set; }
         public MimeMessage CurrentMessage { get; set; }
-
 
         public MainPage()
         {
@@ -86,7 +83,6 @@ namespace ImapMail
             Bindings.Update();
             CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
             SetContent(CurrentMessage);
-
         }
 
         public void RefreshMail()

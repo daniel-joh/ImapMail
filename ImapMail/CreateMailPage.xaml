@@ -7,21 +7,54 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel Orientation="Vertical" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,40">
+    <Page.Resources>
+        <local:ThumbnailToImageConverter x:Key="ThumbnailToImageConverter" />
+    </Page.Resources>
+
+    <ScrollViewer>
+    <StackPanel Orientation="Vertical" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,30">
 
         <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="20,25,40,0">
             <AppBarButton Name="AppBarButtonSendMail" Icon="Send" Label="Send mail" Click="AppBarButton_Click"></AppBarButton>
             <AppBarButton Name="AppBarButtonAttachFile" Icon="Add" Label="Attach file" Click="AppBarButton_Click"></AppBarButton>
         </CommandBar>
-
-        <TextBlock Name="SendMail" FontSize="18" HorizontalAlignment="Left" Margin="20,0,40,0" Text="Create Mail" FontWeight="Bold" VerticalAlignment="Top"/>
-        <TextBox Name="From" Width="600" FontSize="12" Header="From:" HorizontalAlignment="Left" Margin="20,20,40,0" Text="" VerticalAlignment="Top"/>
+     
+        <TextBox Name="From" Width="600" FontSize="12" Header="From:" HorizontalAlignment="Left" Margin="20,0,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="To" Width="600" FontSize="12" Header="To:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="Cc" Width="600" FontSize="12" Header="Cc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="Bcc" Width="600" FontSize="12" Header="Bcc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="Subject" Width="600" FontSize="12" Header="Subject:" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
         <TextBox Name="Message" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="180" MinHeight="180" 
-                 ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left" Margin="20,10,40,30" VerticalAlignment="Top"/>
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left" Margin="20,10,40,15" VerticalAlignment="Top"/>
 
-    </StackPanel>
+        <TextBlock Name="txtAttachedFiles" Text="" FontSize="14" HorizontalAlignment="Left" Margin="20,0,40,0" VerticalAlignment="Top"/>
+           
+        <ListView  x:Name="AttachedFilesListView" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                       Height="60" Width="600" Margin="20,10,20,10"
+                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.IsHorizontalRailEnabled="True">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel RightTapped="ListView_RightTapped">
+                           
+                            <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailToImageConverter}}" Height="40" Width="40" />
+                            <TextBlock FontSize="7" Text="{Binding FileName}"  />
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Delete" Click="Delete_Click"  />
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </StackPanel>
+                        
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+        </StackPanel>
+    </ScrollViewer>
 </Page>

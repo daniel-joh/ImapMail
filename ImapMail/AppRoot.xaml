@@ -9,9 +9,7 @@
     xmlns:appmodel="using:Windows.ApplicationModel">
   
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock x:Name="AppTitle" Style="{StaticResource CaptionTextBlockStyle}" 
-           Text="{x:Bind appmodel:Package.Current.DisplayName}" Margin="12" IsHitTestVisible="False"/>
-
+        
         <NavigationView x:Name="NavView"  OpenPaneLength="200" ItemInvoked="NavView_ItemInvoked"
                     SelectionChanged="NavView_SelectionChanged"
                     Loaded="NavView_Loaded" AlwaysShowHeader="false">
@@ -23,9 +21,7 @@
                 </NavigationViewItem>
                 <NavigationViewItem Icon="Mail"  Content="Mail" Tag="mail"/>
             </NavigationView.MenuItems>
-
-          
-
+         
             <Frame x:Name="ContentFrame" Margin="5">
                 <Frame.ContentTransitions>
                     <TransitionCollection>
@@ -33,7 +29,6 @@
                     </TransitionCollection>
                 </Frame.ContentTransitions>
             </Frame>
-
 
         </NavigationView>
     </Grid>
