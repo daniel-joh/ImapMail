@@ -24,7 +24,9 @@
                 <NavigationViewItem Icon="Mail"  Content="Mail" Tag="mail"/>
             </NavigationView.MenuItems>
 
-            <Frame x:Name="ContentFrame" Margin="12">
+          
+
+            <Frame x:Name="ContentFrame" Margin="5">
                 <Frame.ContentTransitions>
                     <TransitionCollection>
                         <NavigationThemeTransition/>

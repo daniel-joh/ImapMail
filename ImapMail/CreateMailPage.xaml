@@ -9,18 +9,19 @@
 
     <StackPanel Orientation="Vertical" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,40">
 
-        <CommandBar>
+        <CommandBar Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="20,25,40,0">
             <AppBarButton Name="AppBarButtonSendMail" Icon="Send" Label="Send mail" Click="AppBarButton_Click"></AppBarButton>
             <AppBarButton Name="AppBarButtonAttachFile" Icon="Add" Label="Attach file" Click="AppBarButton_Click"></AppBarButton>
         </CommandBar>
 
-        <TextBox Name="From" Width="600" FontSize="12" Header="From:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="To" Width="600" FontSize="12" Header="To:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Cc" Width="600" FontSize="12" Header="Cc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Bcc" Width="600" FontSize="12" Header="Bcc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Subject" Width="600" FontSize="12" Header="Subject:" HorizontalAlignment="Center" Margin="40,5,40,0" Text="" VerticalAlignment="Top"/>
-        <TextBox Name="Message" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="140" MinHeight="140" 
-                 ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" Margin="40,5,40,30" VerticalAlignment="Top"/>
+        <TextBlock Name="SendMail" FontSize="18" HorizontalAlignment="Left" Margin="20,0,40,0" Text="Create Mail" FontWeight="Bold" VerticalAlignment="Top"/>
+        <TextBox Name="From" Width="600" FontSize="12" Header="From:" HorizontalAlignment="Left" Margin="20,20,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="To" Width="600" FontSize="12" Header="To:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Cc" Width="600" FontSize="12" Header="Cc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Bcc" Width="600" FontSize="12" Header="Bcc:" InputScope="EmailNameOrAddress" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Subject" Width="600" FontSize="12" Header="Subject:" HorizontalAlignment="Left" Margin="20,10,40,0" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="Message" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" Width="600" Header="Message:" MaxHeight="180" MinHeight="180" 
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left" Margin="20,10,40,30" VerticalAlignment="Top"/>
 
     </StackPanel>
 </Page>

@@ -7,30 +7,87 @@
     xmlns:local="using:ImapMail"
     mc:Ignorable="d">
 
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="9*"/>
+        </Grid.ColumnDefinitions>
 
-    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal" Margin="0,30,0,0">
+        <ScrollViewer>
+        <Grid Grid.Column="0" Margin="5, 25, 25, 10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
 
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
 
-        <ListView Name="MailListView" Width="340" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" Margin="10,0,20,20" 
+            </Grid.ColumnDefinitions>
+
+            <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+                    <CommandBar.PrimaryCommands>
+                        <AppBarButton HorizontalAlignment="Left" Name="AppBarButtonRefreshMail" Icon="Refresh" Label="Refresh mail" 
+                                      Click="AppBarButton_Click" ></AppBarButton>
+                    </CommandBar.PrimaryCommands>
+                    <CommandBar.Content>
+                        <AutoSuggestBox
+                        x:Name="asb"
+                        PlaceholderText="Search message"                    
+                        QueryIcon="Find"                      
+                        Margin="8"
+                        MinWidth="200"
+                        HorizontalAlignment="Left" >
+                            <!--="asb_TextChanged"                   
+                        QuerySubmitted="asb_QuerySubmitted"
+                        SuggestionChosen="asb_SuggestionChosen"-->
+                        </AutoSuggestBox>
+                    </CommandBar.Content>
+                </CommandBar>
+
+                <ListView  Name="MailListView" Width="340" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" Margin="10,55,20,20" 
                   ItemClick="MailListView_ItemClicked" IsItemClickEnabled="true" SelectionMode="none" BorderBrush="Transparent" BorderThickness="0.5">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:MailHeader">
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,25" >
-                        <TextBlock Name="From" FontSize="18"  Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
-                        <TextBlock Name="Subject" FontSize="16" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
-                        <TextBlock Name="Date" FontSize="15"  Text="{x:Bind Date}" ></TextBlock>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:MailHeader">
+                            <StackPanel Orientation="Vertical" Margin="0,0,0,25" >
+                                <TextBlock Name="From" FontSize="18"  Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
+                                <TextBlock Name="Subject" FontSize="16" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
+                                <TextBlock Name="Date" FontSize="15"  Text="{x:Bind Date}" ></TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </ScrollViewer>
 
+        <Grid  Grid.Column="1" Margin="25 25 25 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" BorderBrush="Black" BorderThickness="0.5" Margin="20,0,0,20">
+            <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <AppBarButton Name="AppBarButtonReplyMail" Icon="MailReply" Label="Reply to mail" Click="AppBarButton_Click"></AppBarButton>
+                <AppBarButton Name="AppBarButtonForwardMail" Icon="MailForward" Label="Forward mail" Click="AppBarButton_Click" ></AppBarButton>
+                <AppBarButton Name="AppBarButtonDeleteMail" Icon="Delete" Label="Delete mail" Click="AppBarButton_Click" ></AppBarButton>
+            </CommandBar>
 
-            <WebView x:Name="webView" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Margin="20,20,0,20"  MinWidth="500" Width="600"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto" />
-        </StackPanel>
-    </StackPanel>
+            <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" />
+            <TextBlock  Grid.Row="2" FontSize="14" x:Name="MessageFrom"  />
+            <TextBlock  Grid.Row="3" FontSize="14" x:Name="MessageDate"  />
+
+            <WebView Grid.Row="4" x:Name="webView"  Margin="0,20,20,20" MinWidth="700" 
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Visible"  Height="774" 
+                      />
+        </Grid>
+
+    </Grid>
 
 </Page>
 

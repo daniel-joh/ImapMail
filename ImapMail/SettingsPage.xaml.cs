@@ -34,17 +34,16 @@ namespace ImapMail
             }
         }
 
-        
         private void CheckSmtpAuth_Checked(object sender, RoutedEventArgs e)
-        {                                                        
-                txtSmtpUser.IsEnabled = true;
-                txtSmtpPassword.IsEnabled = true;            
+        {
+            txtSmtpUser.IsEnabled = true;
+            txtSmtpPassword.IsEnabled = true;
         }
-      
+
         private void CheckSmtpAuth_Unchecked(object sender, RoutedEventArgs e)
-        {              
-                txtSmtpUser.IsEnabled = false;
-                txtSmtpPassword.IsEnabled = false;
+        {
+            txtSmtpUser.IsEnabled = false;
+            txtSmtpPassword.IsEnabled = false;
         }
 
         /// <summary>
@@ -54,6 +53,7 @@ namespace ImapMail
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
 
+            txtUserEmail.Text = (string)localSettings.Values["userEmail"];
             txtImapHost.Text = (string)localSettings.Values["imapHost"];
             txtImapPort.Text = (string)localSettings.Values["imapPort"];
             txtImapUser.Text = (string)localSettings.Values["imapUser"];
@@ -74,7 +74,7 @@ namespace ImapMail
             {
                 checkSmtpSsl.IsChecked = true;
             }
-            else 
+            else
             {
                 checkSmtpSsl.IsChecked = false;
             }
@@ -82,23 +82,23 @@ namespace ImapMail
             string tempSmtpAuth = (string)localSettings.Values["smtpAuth"];
             if (tempSmtpAuth.Equals("true"))
             {
-               checkSmtpAuth.IsChecked = true;
+                checkSmtpAuth.IsChecked = true;
             }
             else
             {
                 checkSmtpAuth.IsChecked = false;
-            }         
+            }
 
             txtSmtpHost.Text = (string)localSettings.Values["smtpHost"];
             txtSmtpPort.Text = (string)localSettings.Values["smtpPort"];
             txtSmtpUser.Text = (string)localSettings.Values["smtpUser"];
             txtSmtpPassword.Password = (string)localSettings.Values["smtpPassword"];
-          
+
             //If smtp authentication is disabled, the txtSmtpUser and txtSmtpPassword textboxes should be disabled
             if (tempSmtpAuth.Equals("false"))
-            {           
+            {
                 txtSmtpUser.IsEnabled = false;
-                txtSmtpPassword.IsEnabled = false;              
+                txtSmtpPassword.IsEnabled = false;
             }
 
         }
@@ -108,16 +108,22 @@ namespace ImapMail
         /// </summary>
         public bool SaveSettings()
         {
+            if (txtUserEmail.Text.Equals(""))
+            {
+                DisplayFailedSaveDialog("User email empty.");
+                txtUserEmail.Focus(FocusState.Programmatic);
+                return false;
+            }
 
             if (txtImapHost.Text.Equals(""))
-            {             
+            {
                 DisplayFailedSaveDialog("IMAP host empty.");
                 txtImapHost.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (txtImapPort.Text.Equals(""))
-            {             
+            {
                 DisplayFailedSaveDialog("IMAP port empty.");
                 txtImapPort.Focus(FocusState.Programmatic);
                 return false;
@@ -170,7 +176,10 @@ namespace ImapMail
             }
 
             /* Sets LocalSettings */
-            Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            Windows.Storage.ApplicationDataContainer localSettings =
+                Windows.Storage.ApplicationData.Current.LocalSettings;
+
+            localSettings.Values["userEmail"] = txtUserEmail.Text;
 
             localSettings.Values["imapHost"] = txtImapHost.Text;
             localSettings.Values["imapPort"] = txtImapPort.Text;
@@ -193,6 +202,8 @@ namespace ImapMail
             localSettings.Values["smtpSsl"] = tempSmtpSsl.ToString().ToLower();
 
             /* Sets MailHandler properties */
+            MailHandler.UserEmail = txtUserEmail.Text;
+
             MailHandler.ImapHost = txtImapHost.Text;
 
             try
@@ -202,7 +213,8 @@ namespace ImapMail
             }
             catch (FormatException e)
             {
-                Debug.WriteLine("User entered incorrect value for port!");
+
+                DisplayFailedSaveDialog("Incorrect value for port!");
                 return false;
             }
 
@@ -221,20 +233,18 @@ namespace ImapMail
 
         private void OnSaveButtonClick(object sender, RoutedEventArgs e)
         {
-            if (!SaveSettings())
-            {
-                //DisplayFailedSaveDialog("test");
-            }
-            else
+            bool saveFlag = SaveSettings();
+
+            if (saveFlag)
             {
                 DisplaySaveSuccessDialog();
 
+                Debug.WriteLine(MailHandler.UserEmail);
                 Debug.WriteLine(MailHandler.ImapHost);
                 Debug.WriteLine(MailHandler.ImapPort);
                 Debug.WriteLine(MailHandler.ImapUser);
                 Debug.WriteLine(MailHandler.ImapPassword);
                 Debug.WriteLine(MailHandler.ImapUseSsl);
-
                 Debug.WriteLine(MailHandler.SmtpHost);
                 Debug.WriteLine(MailHandler.SmtpPort);
                 Debug.WriteLine(MailHandler.SmtpUser);
@@ -267,6 +277,26 @@ namespace ImapMail
             };
 
             ContentDialogResult result = await saveSuccessDialog.ShowAsync();
+        }
+
+        public void RemoveSettings()
+        {
+            Windows.Storage.ApplicationDataContainer localSettings =
+                Windows.Storage.ApplicationData.Current.LocalSettings;
+
+            localSettings.Values.Remove("userEmail");
+            localSettings.Values.Remove("imapHost");
+            localSettings.Values.Remove("imapPort");
+            localSettings.Values.Remove("imapUser");
+            localSettings.Values.Remove("imapPassword");
+            localSettings.Values.Remove("imapSsl");
+            localSettings.Values.Remove("smtpHost");
+            localSettings.Values.Remove("smtpPort");
+            localSettings.Values.Remove("smtpAuth");
+            localSettings.Values.Remove("smtpUser");
+            localSettings.Values.Remove("smtpPassword");
+            localSettings.Values.Remove("smtpSsl");
+
         }
     }
 }

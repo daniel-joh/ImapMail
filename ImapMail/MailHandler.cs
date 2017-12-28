@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using MailKit.Net.Smtp;
 using System.Globalization;
+using System.IO;
 
 namespace ImapMail
 {
@@ -16,24 +17,29 @@ namespace ImapMail
         private static ImapClient client;
 
         internal static bool LoggedIn { get; set; }
-        
+
+        internal static string UserEmail { get; set; } 
+
         /* IMAP properties */
         internal static string ImapHost { get; set; }
-        internal static int ImapPort { get; set; } 
-        internal static bool ImapUseSsl { get; set; } 
+        internal static int ImapPort { get; set; }
+        internal static bool ImapUseSsl { get; set; }
         internal static string ImapUser { get; set; }
         internal static string ImapPassword { get; set; }
 
         /* SMTP properties */
-        internal static string SmtpHost { get; set; } 
-        internal static int SmtpPort { get; set; } 
-        internal static bool SmtpUseSsl { get; set; } 
-        internal static bool SmtpAuth { get; set; } 
+        internal static string SmtpHost { get; set; }
+        internal static int SmtpPort { get; set; }
+        internal static bool SmtpUseSsl { get; set; }
+        internal static bool SmtpAuth { get; set; }
         internal static string SmtpUser { get; set; }
         internal static string SmtpPassword { get; set; }
 
         //Dictionary for attached files
         internal static Dictionary<string, byte[]> attachedFiles { get; set; }
+
+        internal static MimeMessage Message { get; set; }
+        internal static bool ReplyFlag { get; set; }
 
         /// <summary>
         /// Logs in to imap mail server
@@ -85,12 +91,12 @@ namespace ImapMail
             ObservableCollection<MailHeader> headerList = new ObservableCollection<MailHeader>();
 
             if (LoggedIn == true)
-            {              
+            {
                 var inbox = client.Inbox;
                 inbox.Open(FolderAccess.ReadOnly);
 
                 //Debug.WriteLine("Total messages: {0}", inbox.Count);
-             
+
                 var summaryItems = inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.UniqueId).ToList();
 
                 //Sorts messagesummaries in reverse arrival order
@@ -98,11 +104,11 @@ namespace ImapMail
                 MessageSorter.Sort(summaryItems, orderBy);
 
                 foreach (MessageSummary summary in summaryItems)
-                {                
-                    MailHeader mailHeader=ConvertMessageSummary(summary);
+                {
+                    MailHeader mailHeader = ConvertMessageSummary(summary);
                     headerList.Add(mailHeader);
                 }
-              
+
             }
             else
             {
@@ -120,7 +126,7 @@ namespace ImapMail
         /// <returns></returns>
         public static MailHeader ConvertMessageSummary(MessageSummary msgSum)
         {
-            MailHeader mailHeader = new MailHeader();
+            var mailHeader = new MailHeader();
 
             mailHeader.Subject = msgSum.Envelope.Subject;
 
@@ -129,9 +135,9 @@ namespace ImapMail
 
             //For all InternetAddresses in InternetAddressList, add display name (if it exists) 
             //to the fromString, otherwise add email address
-            foreach(var from in fromList)
-            {                           
-                if (from.Name==null || from.Name.Equals(""))
+            foreach (var from in fromList)
+            {
+                if (from.Name == null || from.Name.Equals(""))
                 {
                     if (fromList.Count > 1)
                     {
@@ -147,19 +153,19 @@ namespace ImapMail
                         fromString = from.Name + "," + fromString;
                     }
                     else
-                        fromString = from.Name;              
+                        fromString = from.Name;
                 }
-              
+
             }
 
             mailHeader.From = fromString;
 
-            string date="";
+            string date = "";
 
             //If the message´s date is today - set date string to Hour+Minute only. Otherwise set to full date&time
             if (msgSum.Date.Day == DateTimeOffset.Now.Day)
-            {                    
-                date = msgSum.Date.Hour + ":" + msgSum.Date.Minute;              
+            {
+                date = msgSum.Date.Hour + ":" + msgSum.Date.Minute;
             }
             else
             {
@@ -167,7 +173,7 @@ namespace ImapMail
 
                 //Formats the date to swedish culture
                 date = msgSum.Date.ToString(format, new CultureInfo("sv-SE"));
-           
+
             }
 
             mailHeader.Date = date;
@@ -183,7 +189,7 @@ namespace ImapMail
         /// <returns>MimeMessage</returns>
         public static MimeMessage GetSpecificMail(UniqueId uid)
         {
-            MimeMessage mail=null;
+            MimeMessage mail = null;
 
             if (LoggedIn == true)
             {
@@ -194,7 +200,7 @@ namespace ImapMail
                     inbox.Open(FolderAccess.ReadOnly);
                 }
 
-                mail = inbox.GetMessage(uid);             
+                mail = inbox.GetMessage(uid);
             }
             else
             {
@@ -214,9 +220,9 @@ namespace ImapMail
         /// <param name="subject"></param>
         /// <param name="bodyText"></param>
         public static void SendMail(string from, string to, string subject, string bodyText)
-        {
+        {         
             var message = new MimeMessage();
-      
+
             message.From.Add(new MailboxAddress(from));
             message.To.Add(new MailboxAddress(to));
             message.Subject = subject;
@@ -224,7 +230,7 @@ namespace ImapMail
             var builder = new BodyBuilder();
 
             builder.TextBody = bodyText;
-           
+
             if (attachedFiles.Count != 0)
             {
                 //Adds all attached files to the message
@@ -238,7 +244,7 @@ namespace ImapMail
             message.Body = builder.ToMessageBody();
 
             using (var client = new SmtpClient())
-            {                  
+            {
                 client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
 
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
@@ -248,12 +254,157 @@ namespace ImapMail
                 {
                     client.Authenticate(SmtpUser, SmtpPassword);
                 }
+
+                client.Send(message);
+                client.Disconnect(true);
+
+                Debug.WriteLine(" Mail sent!");
                 
+            }
+
+        }
+
+        /// <summary>
+        /// Method for sending replied messages
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="subject"></param>
+        /// <param name="bodyText"></param>
+        public static void SendMail(MimeMessage message, string from, string to, string subject, string bodyText)
+        {
+            //message.From and message.To needs to be cleared first
+            message.From.Clear();
+            message.From.Add(new MailboxAddress(from));
+
+            message.To.Clear();
+            message.To.Add(new MailboxAddress(to));
+
+            message.Subject = subject;
+
+            var builder = new BodyBuilder();
+
+            builder.TextBody = bodyText;
+
+            if (attachedFiles.Count != 0)
+            {
+                //Adds all attached files to the message
+                foreach (var file in attachedFiles)
+                {
+                    builder.Attachments.Add(file.Key, file.Value);
+                    Debug.WriteLine(file.Key + file.Value + "\n");
+                }
+            }
+
+            message.Body = builder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
+
+                client.AuthenticationMechanisms.Remove("XOAUTH2");
+
+                //If smtp authentication is required
+                if (SmtpAuth == true)
+                {
+                    client.Authenticate(SmtpUser, SmtpPassword);
+                }
+
                 client.Send(message);
                 client.Disconnect(true);
 
                 Debug.WriteLine(" Mail sent!");
             }
+        }
+
+        /// <summary>
+        /// Creates a reply message
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static MimeMessage CreateReply(MimeMessage message)
+        {
+            var replyMessage = new MimeMessage();
+
+            var userMailbox = new MailboxAddress(UserEmail);
+
+            replyMessage.From.Add(userMailbox);
+
+            //Adds the To address(es)
+            if (message.ReplyTo.Count > 0)
+            {
+                replyMessage.To.AddRange(message.ReplyTo);
+            }
+            else if (message.From.Count > 0)
+            {
+                replyMessage.To.AddRange(message.From);
+            }
+            else if (message.Sender != null)
+            {
+                replyMessage.To.Add(message.Sender);
+            }
+
+            //Sets the subject of the reply message       
+            replyMessage.Subject = "Re: " + message.Subject;
+
+            //Creates the In-Reply-To and References headers
+            if (!string.IsNullOrEmpty(message.MessageId))
+            {
+                replyMessage.InReplyTo = message.MessageId;
+                foreach (var id in message.References)
+                    replyMessage.References.Add(id);
+                replyMessage.References.Add(message.MessageId);
+            }
+
+            //Quotes the original message text
+            using (var quoted = new StringWriter())
+            {
+                MailboxAddress sender;
+                if (message.Sender != null)
+                {
+                    sender = message.Sender;
+                }
+                else
+                {
+                    sender = userMailbox;
+                }            
+
+                string tempMessageDate = message.Date.ToString("u");               
+                quoted.WriteLine("On {0}, {1} wrote:", tempMessageDate.Substring(0, 16), 
+                    !string.IsNullOrEmpty(sender.Name) ? sender.Name : sender.Address);
+
+                StringReader reader;
+
+                //If the body part is Text/Plain
+                if (message.TextBody != null)
+                {
+                    reader = new StringReader(message.TextBody);
+                }
+                //If the body part is Text/Html
+                else
+                {
+                    reader = new StringReader(message.HtmlBody);
+                }
+
+                string line;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    quoted.Write("> ");
+                    quoted.WriteLine(line);
+                }
+
+                //Sets the body part of the message
+                var textPart = new TextPart("plain");
+                textPart.Text = quoted.ToString();             
+                replyMessage.Body = textPart;
+
+                reader.Close();
+                reader = null;
+
+            }
+
+            return replyMessage;
         }
 
     }

@@ -30,8 +30,6 @@ namespace ImapMail
             this.InitializeComponent();
 
             this.Loaded += new RoutedEventHandler(AppRoot_Loaded);
-
-
         }
 
         void AppRoot_Loaded(object sender, RoutedEventArgs e)
@@ -42,7 +40,6 @@ namespace ImapMail
             }
             else
                 ContentFrame.Navigate(typeof(MainPage));
-
 
         }
 
@@ -58,17 +55,17 @@ namespace ImapMail
                     break;
                 }
             }
-           
+
             CoreApplicationViewTitleBar titleBar = CoreApplication.GetCurrentView().TitleBar;
             titleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
-          
+
         }
- 
+
         private void TitleBar_LayoutMetricsChanged(CoreApplicationViewTitleBar sender, object args)
         {
             AppTitle.Margin = new Thickness(CoreApplication.GetCurrentView().TitleBar.SystemOverlayLeftInset + 12, 8, 0, 0);
         }
-        
+
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.IsSettingsInvoked)
@@ -83,11 +80,10 @@ namespace ImapMail
                         ContentFrame.Navigate(typeof(MainPage));
                         break;
 
-                    case "Mail":
-                        OpenCreateMailPage();
+                    case "Mail":                       
+                        MailHandler.ReplyFlag = false;
+                        ContentFrame.Navigate(typeof(CreateMailPage));                    
                         break;
-
-                    
                 }
             }
         }
@@ -100,7 +96,6 @@ namespace ImapMail
             }
             else
             {
-
                 NavigationViewItem item = args.SelectedItem as NavigationViewItem;
 
                 switch (item.Tag)
@@ -109,11 +104,9 @@ namespace ImapMail
                         ContentFrame.Navigate(typeof(MainPage));
                         break;
 
-                    case "Mail":
-                        OpenCreateMailPage();
+                    case "Mail":                       
+                        ContentFrame.Navigate(typeof(CreateMailPage));
                         break;
-
-                  
                 }
             }
         }
@@ -121,7 +114,7 @@ namespace ImapMail
         /// <summary>
         /// Opens CreateMailPage
         /// </summary>
-        public async void OpenCreateMailPage()
+        /*public async void OpenCreateMailPage()
         {
             CoreApplicationView newView = CoreApplication.CreateNewView();
             int newViewId = 0;
@@ -135,9 +128,6 @@ namespace ImapMail
             });
             bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
 
-        }
-
-
-
+        }*/
     }
 }

@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using MimeKit;
 
 namespace ImapMail
 {
@@ -26,27 +27,109 @@ namespace ImapMail
         {
             this.InitializeComponent();
 
-            for (int i = 0; i < 5; i++)
+            this.Loaded += new RoutedEventHandler(CreateMailPage_Loaded);
+
+            for (int i = 0; i < 9; i++)
                 Message.Text += Environment.NewLine;
 
             MailHandler.attachedFiles = new Dictionary<string, byte[]>();
+
         }
 
+        void CreateMailPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            InitUi();
+
+        }
+
+        private void InitUi()
+        {
+            From.Text = MailHandler.UserEmail;
+
+            //If the user has clicked Reply
+            if (MailHandler.ReplyFlag == true)
+            {
+                if (MailHandler.Message != null)
+                {
+                    MailHandler.Message = MailHandler.CreateReply(MailHandler.Message);
+                }
+
+                var message = MailHandler.Message;
+
+                //Adds From text
+                List<MailboxAddress> tempList = message.From.Mailboxes.ToList();
+                From.Text = tempList[0].Address;
+
+                //Adds To text
+                string tempTo = message.To.ToString();
+                int startIndex = tempTo.IndexOf('<');
+                int endIndex = tempTo.LastIndexOf('>');
+                int length = endIndex - startIndex - 1;
+
+                //If '<' and '>' was found, set the email address to the To textbox without those characters, 
+                //otherwise just set the To textbox
+                if (startIndex != -1 || length != -1)
+                {
+                    //email==string between "<" and ">" only 
+                    string email = tempTo.Substring(startIndex + 1, length);
+                    To.Text = email;
+                }
+                else
+                {
+                    To.Text = tempTo;
+                }
+
+                Subject.Text = message.Subject;
+
+                Message.Text = message.TextBody;
+
+            }
+        }
 
         private void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource == AppBarButtonSendMail)
             {
-                Debug.WriteLine("Send mail clicked");
-
-                MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
+                HandleSendingMail();
             }
             else if (e.OriginalSource == AppBarButtonAttachFile)
             {
-                Debug.WriteLine("Attach file clicked");
                 AttachFile();
             }
 
+        }
+
+        private void HandleSendingMail()
+        {
+            //Add success/failure code
+            if (MailHandler.ReplyFlag == true)
+                MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Subject.Text, Message.Text);
+            else
+                MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
+        }
+
+        private async void DisplaySendSuccessDialog()
+        {
+            ContentDialog sendSuccessDialog = new ContentDialog
+            {
+                Title = "Send was successful",
+                Content = "Mail sent!",
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await sendSuccessDialog.ShowAsync();
+        }
+
+        private async void DisplayFailedSendDialog(string message)
+        {
+            ContentDialog failedSendDialog = new ContentDialog
+            {
+                Title = "Send failed",
+                Content = message + " Try again!",
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await failedSendDialog.ShowAsync();
         }
 
         public async void AttachFile()
@@ -64,10 +147,7 @@ namespace ImapMail
 
             }
 
-
         }
-
-
 
     }
 }

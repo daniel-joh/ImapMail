@@ -10,6 +10,10 @@
     <ScrollViewer>
         <StackPanel Orientation="Vertical" >
 
+            <TextBlock Name="txtEmail"  Text="USER EMAIL" FontWeight="Bold" FontSize="14"   TextWrapping="Wrap"  Margin="20,20,20,0"/>
+
+            <TextBox Name="txtUserEmail" Header="Email:" FontSize="12"  Width="400" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="20,20,0,0"/>
+
             <TextBlock Name="txtImap"  Text="IMAP SETTINGS" FontWeight="Bold" FontSize="14"   TextWrapping="Wrap"  Margin="20,20,20,0"/>
 
             <TextBox Name="txtImapHost" Header="Host:" FontSize="12"  Width="400" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="20,20,0,0"/>
@@ -29,9 +33,9 @@
 
             <TextBox Name="txtSmtpPort" Header="Port:"  FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,20,0,0"/>
 
-            <CheckBox Name="checkSmtpAuth" Checked="CheckSmtpAuth_Checked" Unchecked="CheckSmtpAuth_Unchecked" Content="Authentication required?" FontSize="12"  HorizontalAlignment="Left" Margin="20,10,0,0" />
+            <CheckBox Name="checkSmtpAuth" Checked="CheckSmtpAuth_Checked" Unchecked="CheckSmtpAuth_Unchecked" Content="Authentication required?" FontSize="12"  HorizontalAlignment="Left" Margin="20,20,0,0" />
 
-            <TextBox Name="txtSmtpUser" Header="Username:" FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,20,0,0"/>
+            <TextBox Name="txtSmtpUser" Header="Username:" FontSize="12" TextWrapping="Wrap"  Width="400" HorizontalAlignment="Left" Margin="20,5,0,0"/>
 
             <PasswordBox Name="txtSmtpPassword" Header="Password:" FontSize="12" Width="400" HorizontalAlignment="Left" Margin="20,20,0,0" MaxLength="30"/>
 

@@ -19,6 +19,7 @@ using MimeKit;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using System.Globalization;
 
 namespace ImapMail
 {
@@ -29,6 +30,8 @@ namespace ImapMail
     {
 
         public ObservableCollection<MailHeader> MailHeaderList { get; set; }
+        public MimeMessage CurrentMessage { get; set; }
+
 
         public MainPage()
         {
@@ -43,6 +46,8 @@ namespace ImapMail
         public void LoadSettings()
         {
             Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+
+            MailHandler.UserEmail = (string)localSettings.Values["userEmail"];
 
             MailHandler.ImapHost = (string)localSettings.Values["imapHost"];
 
@@ -79,8 +84,8 @@ namespace ImapMail
             MailHandler.Login();
             MailHeaderList = MailHandler.GetMailHeaders();
             Bindings.Update();
-            MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
-            SetContentToWebView(mail);
+            CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
+            SetContent(CurrentMessage);
 
         }
 
@@ -92,8 +97,8 @@ namespace ImapMail
             MailHeaderList = MailHandler.GetMailHeaders();
 
             Bindings.Update();              //Updates the ListView data
-            MimeMessage mail = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
-            SetContentToWebView(mail);
+            CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
+            SetContent(CurrentMessage);
         }
 
         /// <summary>
@@ -105,9 +110,37 @@ namespace ImapMail
         {
             MailHeader msg = (MailHeader)e.ClickedItem;
 
-            MimeMessage mail = MailHandler.GetSpecificMail(msg.UniqueId);
+            CurrentMessage = MailHandler.GetSpecificMail(msg.UniqueId);
 
-            SetContentToWebView(mail);
+            SetContent(CurrentMessage);
+
+        }
+
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource == AppBarButtonForwardMail)
+            {
+                Debug.WriteLine("Forward mail clicked");
+
+            }
+            else if (e.OriginalSource == AppBarButtonReplyMail)
+            {
+                Debug.WriteLine("Reply mail clicked");
+
+                MailHandler.ReplyFlag = true;
+                MailHandler.Message = CurrentMessage;
+                Frame.Navigate(typeof(CreateMailPage));
+
+            }
+            else if (e.OriginalSource == AppBarButtonDeleteMail)
+            {
+                Debug.WriteLine("Delete mail clicked");
+
+            }
+            else if (e.OriginalSource == AppBarButtonRefreshMail)
+            {
+                RefreshMail();
+            }
 
         }
 
@@ -115,7 +148,7 @@ namespace ImapMail
         /// Sets mail content (html or text depending on what´s available) to the webview
         /// </summary>
         /// <param name="mail"></param>
-        public void SetContentToWebView(MimeMessage mail)
+        public void SetContent(MimeMessage mail)
         {
             if (mail.HtmlBody != null)
             {
@@ -125,9 +158,17 @@ namespace ImapMail
             {
                 webView.NavigateToString(mail.TextBody);
             }
+
+            if (mail.Subject != null)
+                MessageSubject.Text = mail.Subject;
+
+            string format = "yyyy-MM-dd HH:mm";
+            MessageDate.Text = mail.Date.ToString(format, new CultureInfo("sv-SE"));
+
+            var addressList = mail.From;
+            MessageFrom.Text = addressList[0].ToString();
+
         }
-
-
 
     }
 }
