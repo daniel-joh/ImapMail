@@ -7,6 +7,10 @@
     xmlns:local="using:ImapMail"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <local:ThumbnailToImageConverter x:Key="ThumbnailToImageConverter" />
+    </Page.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"/>
@@ -77,6 +81,7 @@
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
             </Grid.RowDefinitions>
 
             <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -85,11 +90,35 @@
                 <AppBarButton Name="AppBarButtonDeleteMail" Icon="Delete" Label="Delete mail" Click="AppBarButton_Click" ></AppBarButton>
             </CommandBar>
 
-            <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" />
-            <TextBlock  Grid.Row="2" FontSize="14" x:Name="MessageFrom"  />
-            <TextBlock  Grid.Row="3" FontSize="14" x:Name="MessageDate"  />
+            <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" VerticalAlignment="Top"/>
+            <TextBlock  Grid.Row="2" FontSize="14" x:Name="MessageFrom"  VerticalAlignment="Top"/>
+            <TextBlock  Grid.Row="3" FontSize="14" x:Name="MessageDate"  VerticalAlignment="Top"/>
 
-            <WebView Grid.Row="4" x:Name="webView"  Margin="0,20,20,20" MinWidth="700" 
+            <ListView  x:Name="AttachedFilesListView"  
+                       Height="60"  Margin="0,20,0,0" VerticalAlignment="Top" Grid.Row="4"
+                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.IsHorizontalRailEnabled="True" DoubleTapped="AttachedFilesListView_DoubleClick">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel RightTapped="ListView_RightTapped">
+                            <Image Source="{Binding Thumbnail, Converter={StaticResource ThumbnailToImageConverter}}" Height="40" Width="40" />
+                            <TextBlock FontSize="7" Text="{Binding FileName}"  />
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Save" Click="Save_Click" />
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <WebView Grid.Row="5" x:Name="webView"  MinWidth="700"  VerticalAlignment="Top" Margin="0,20,0,0"
                      ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Visible"  Height="774" 
                       />
         </Grid>

@@ -25,7 +25,7 @@ namespace ImapMail
     /// </summary>
     public sealed partial class CreateMailPage : Page
     {
-        ObservableCollection<AttachedFile> FileList { get; set; }
+        public ObservableCollection<AttachedFile> FileList { get; set; }
 
         int SelectedIndex { get; set; }
 
@@ -41,7 +41,6 @@ namespace ImapMail
             MailHandler.attachedFiles = new Dictionary<string, byte[]>();
 
             FileList = new ObservableCollection<AttachedFile>();
-
         }
 
         void CreateMailPage_Loaded(object sender, RoutedEventArgs e)
@@ -49,8 +48,11 @@ namespace ImapMail
             InitUi();
         }
 
+        /// <summary>
+        /// Inits the UI
+        /// </summary>
         private void InitUi()
-        {          
+        {
             From.Text = MailHandler.UserEmail;
 
             //If the user has clicked Reply
@@ -92,6 +94,11 @@ namespace ImapMail
             }
         }
 
+        /// <summary>
+        /// Handles Appbar button clicks
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource == AppBarButtonSendMail)
@@ -102,61 +109,44 @@ namespace ImapMail
             {
                 AttachFile();
             }
-
         }
 
+        /// <summary>
+        /// Handles sending mail
+        /// </summary>
         private void HandleSendingMail()
         {
-            if (To.Text==null || To.Text.Equals(""))
+            if (To.Text == null || To.Text.Equals(""))
             {
-                DisplayMissingInformationDialog("To field empty.");
+                DisplayDialog("Missing information", "To field empty.");
                 To.Focus(FocusState.Programmatic);
                 return;
             }
 
-            //Add success/failure code
+            bool success;
+
             if (MailHandler.ReplyFlag == true)
-                MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Subject.Text, Message.Text);
+            {
+                success = MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Subject.Text, Message.Text);
+            }
             else
-                MailHandler.SendMail(From.Text, To.Text, Subject.Text, Message.Text);
-        }
-
-        private async void DisplayMissingInformationDialog(string message)
-        {
-            ContentDialog missingInformationDialog = new ContentDialog
             {
-                Title = "Missing information",
-                Content = message + " Try again!",
-                CloseButtonText = "Ok"
-            };
+                success = MailHandler.SendMail(null, From.Text, To.Text, Subject.Text, Message.Text);
+            }
 
-            ContentDialogResult result = await missingInformationDialog.ShowAsync();
-        }
-
-        private async void DisplaySendSuccessDialog()
-        {
-            ContentDialog sendSuccessDialog = new ContentDialog
+            if (success)
             {
-                Title = "Send was successful",
-                Content = "Mail sent!",
-                CloseButtonText = "Ok"
-            };
-
-            ContentDialogResult result = await sendSuccessDialog.ShowAsync();
-        }
-
-        private async void DisplayFailedSendDialog(string message)
-        {
-            ContentDialog failedSendDialog = new ContentDialog
+                DisplayDialog("Mail sent", "Mail was sent successfully!");
+            }
+            else
             {
-                Title = "Send failed",
-                Content = message + " Try again!",
-                CloseButtonText = "Ok"
-            };
-
-            ContentDialogResult result = await failedSendDialog.ShowAsync();
+                DisplayDialog("Send failed", "Mail failed to send. Try again!");
+            }
         }
 
+        /// <summary>
+        /// Attaches files. Let´s the user choose file(s) to attach to the mail
+        /// </summary>
         public async void AttachFile()
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker();
@@ -165,6 +155,17 @@ namespace ImapMail
             picker.FileTypeFilter.Add("*");
 
             Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
+
+            //Checks if the file has already been added
+            foreach (var tempFile in FileList)
+            {
+                if (tempFile.FileName.Equals(file.Name))
+                {
+                    DisplayDialog("Error attaching file", "This file has already been attached! Try again!");
+                    return;
+                }
+            }
+
             if (file != null)
             {
                 //For use when sending the mail (adds file to the list of attached files)
@@ -175,7 +176,7 @@ namespace ImapMail
                 FileList.Add(new AttachedFile
                 {
                     FileName = file.Name,
-                    Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView)                  
+                    Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView)
                 });
 
                 txtAttachedFiles.Text = "Attached files:";
@@ -183,7 +184,7 @@ namespace ImapMail
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
-        {        
+        {
             this.AttachedFilesListView.ItemsSource = FileList;
         }
 
@@ -191,9 +192,14 @@ namespace ImapMail
         {
             FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
 
-            SelectedIndex= AttachedFilesListView.SelectedIndex;                    
+            SelectedIndex = AttachedFilesListView.SelectedIndex;
         }
 
+        /// <summary>
+        /// Method for deleting attached files
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedIndex != -1)
@@ -202,7 +208,24 @@ namespace ImapMail
                 FileList.RemoveAt(SelectedIndex);
 
                 MailHandler.attachedFiles.Remove(fileName);
-            }     
+            }
+        }
+
+        /// <summary>
+        /// Displays a dialog
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="message"></param>
+        private async void DisplayDialog(string title, string message)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "Ok"
+            };
+
+            ContentDialogResult result = await errorDialog.ShowAsync();
         }
 
     }

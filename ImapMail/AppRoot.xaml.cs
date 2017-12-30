@@ -98,24 +98,6 @@ namespace ImapMail
                 }
             }
         }
-
-        /// <summary>
-        /// Opens CreateMailPage
-        /// </summary>
-        /*public async void OpenCreateMailPage()
-        {
-            CoreApplicationView newView = CoreApplication.CreateNewView();
-            int newViewId = 0;
-            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                Frame frame = new Frame();
-                frame.Navigate(typeof(CreateMailPage), null);
-                Window.Current.Content = frame;
-                Window.Current.Activate();
-                newViewId = ApplicationView.GetForCurrentView().Id;
-            });
-            bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
-
-        }*/
+     
     }
 }

@@ -18,7 +18,7 @@ namespace ImapMail
 
         internal static bool LoggedIn { get; set; }
 
-        internal static string UserEmail { get; set; } 
+        internal static string UserEmail { get; set; }
 
         /* IMAP properties */
         internal static string ImapHost { get; set; }
@@ -44,7 +44,7 @@ namespace ImapMail
         /// <summary>
         /// Logs in to imap mail server
         /// </summary>
-        public static void Login()
+        public static bool Login()
         {
             if (client == null)
             {
@@ -54,15 +54,23 @@ namespace ImapMail
                 {
                     //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-                    client.Connect(ImapHost, ImapPort, ImapUseSsl);
+                    try
+                    {
+                        client.Connect(ImapHost, ImapPort, ImapUseSsl);
 
-                    client.AuthenticationMechanisms.Remove("XOAUTH2");
-                    client.Authenticate(ImapUser, ImapPassword);
-
-                    LoggedIn = true;
+                        client.AuthenticationMechanisms.Remove("XOAUTH2");
+                        client.Authenticate(ImapUser, ImapPassword);
+                        LoggedIn = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("Error logging in to mail server. Message: " + e.ToString());
+                        return false;
+                    }
                 }
             }
 
+            return true;
         }
 
         /// <summary>
@@ -79,7 +87,6 @@ namespace ImapMail
                     LoggedIn = false;
                 }
             }
-
         }
 
         /// <summary>
@@ -90,7 +97,7 @@ namespace ImapMail
         {
             ObservableCollection<MailHeader> headerList = new ObservableCollection<MailHeader>();
 
-            if (LoggedIn == true)
+            if (LoggedIn)
             {
                 var inbox = client.Inbox;
                 inbox.Open(FolderAccess.ReadOnly);
@@ -108,12 +115,14 @@ namespace ImapMail
                     MailHeader mailHeader = ConvertMessageSummary(summary);
                     headerList.Add(mailHeader);
                 }
-
             }
             else
             {
-                Login();
-                GetMailHeaders();
+
+                if (Login())
+                {
+                    GetMailHeaders();
+                }
             }
 
             return headerList;
@@ -173,7 +182,6 @@ namespace ImapMail
 
                 //Formats the date to swedish culture
                 date = msgSum.Date.ToString(format, new CultureInfo("sv-SE"));
-
             }
 
             mailHeader.Date = date;
@@ -204,81 +212,44 @@ namespace ImapMail
             }
             else
             {
-                Login();
-                GetSpecificMail(uid);
+                if (Login())
+                {
+                    GetSpecificMail(uid);
+                }
             }
 
             return mail;
-
         }
 
         /// <summary>
         /// Connects to smtp server and sends mail
         /// </summary>
+        /// <param name="msg"></param>
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <param name="subject"></param>
         /// <param name="bodyText"></param>
-        public static void SendMail(string from, string to, string subject, string bodyText)
-        {         
+        /// <returns></returns>
+        public static bool SendMail(MimeMessage msg, string from, string to, string subject, string bodyText)
+        {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(from));
-            message.To.Add(new MailboxAddress(to));
-            message.Subject = subject;
-
-            var builder = new BodyBuilder();
-
-            builder.TextBody = bodyText;
-
-            if (attachedFiles.Count != 0)
+            if (ReplyFlag == true)
             {
-                //Adds all attached files to the message
-                foreach (var file in attachedFiles)
-                {
-                    builder.Attachments.Add(file.Key, file.Value);
-                    Debug.WriteLine(file.Key + file.Value + "\n");
-                }
+                //message.From and message.To needs to be cleared first
+                msg.From.Clear();
+                msg.From.Add(new MailboxAddress(from));
+
+                msg.To.Clear();
+                msg.To.Add(new MailboxAddress(to));
+
+                message = msg;
             }
-
-            message.Body = builder.ToMessageBody();
-
-            using (var client = new SmtpClient())
+            else
             {
-                client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
-
-                client.AuthenticationMechanisms.Remove("XOAUTH2");
-
-                //If smtp authentication is required
-                if (SmtpAuth == true)
-                {
-                    client.Authenticate(SmtpUser, SmtpPassword);
-                }
-
-                client.Send(message);
-                client.Disconnect(true);
-
-                Debug.WriteLine(" Mail sent!");
-                
+                message.From.Add(new MailboxAddress(from));
+                message.To.Add(new MailboxAddress(to));
             }
-
-        }
-
-        /// <summary>
-        /// Method for sending replied messages
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <param name="subject"></param>
-        /// <param name="bodyText"></param>
-        public static void SendMail(MimeMessage message, string from, string to, string subject, string bodyText)
-        {
-            //message.From and message.To needs to be cleared first
-            message.From.Clear();
-            message.From.Add(new MailboxAddress(from));
-
-            message.To.Clear();
-            message.To.Add(new MailboxAddress(to));
 
             message.Subject = subject;
 
@@ -298,7 +269,9 @@ namespace ImapMail
 
             message.Body = builder.ToMessageBody();
 
-            using (var client = new SmtpClient())
+            var client = new SmtpClient();
+
+            try
             {
                 client.Connect(SmtpHost, SmtpPort, SmtpUseSsl);
 
@@ -312,9 +285,18 @@ namespace ImapMail
 
                 client.Send(message);
                 client.Disconnect(true);
-
-                Debug.WriteLine(" Mail sent!");
             }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Error message: " + e.Message);
+                return false;
+            }
+
+            client = null;
+
+            Debug.WriteLine(" Mail sent!");
+
+            return true;
         }
 
         /// <summary>
@@ -367,10 +349,10 @@ namespace ImapMail
                 else
                 {
                     sender = userMailbox;
-                }            
+                }
 
-                string tempMessageDate = message.Date.ToString("u");               
-                quoted.WriteLine("On {0}, {1} wrote:", tempMessageDate.Substring(0, 16), 
+                string tempMessageDate = message.Date.ToString("u");
+                quoted.WriteLine("On {0}, {1} wrote:", tempMessageDate.Substring(0, 16),
                     !string.IsNullOrEmpty(sender.Name) ? sender.Name : sender.Address);
 
                 StringReader reader;
@@ -396,17 +378,15 @@ namespace ImapMail
 
                 //Sets the body part of the message
                 var textPart = new TextPart("plain");
-                textPart.Text = quoted.ToString();             
+                textPart.Text = quoted.ToString();
                 replyMessage.Body = textPart;
 
                 reader.Close();
                 reader = null;
-
             }
 
             return replyMessage;
         }
-
     }
 }
 
