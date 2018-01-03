@@ -90,7 +90,8 @@
                 <AppBarButton Name="AppBarButtonDeleteMail" Icon="Delete" Label="Delete mail" Click="AppBarButton_Click" ></AppBarButton>
             </CommandBar>
 
-            <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" VerticalAlignment="Top"/>
+            <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" 
+                        Margin="0,10,0,0" VerticalAlignment="Top"/>
             <TextBlock  Grid.Row="2" FontSize="14" x:Name="MessageFrom"  VerticalAlignment="Top"/>
             <TextBlock  Grid.Row="3" FontSize="14" x:Name="MessageDate"  VerticalAlignment="Top"/>
 

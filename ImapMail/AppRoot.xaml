@@ -19,7 +19,7 @@
                         <FontIcon Glyph="&#xE10F;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Icon="Mail"  Content="Mail" Tag="mail"/>
+                <NavigationViewItem Icon="Mail"  Content="Send Mail" Tag="mail"/>
             </NavigationView.MenuItems>
          
             <Frame x:Name="ContentFrame" Margin="5">

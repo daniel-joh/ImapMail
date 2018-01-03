@@ -301,11 +301,13 @@ namespace ImapMail
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        private async void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource == AppBarButtonForwardMail)
             {
-                Debug.WriteLine("Forward mail clicked");
+                MailHandler.ForwardFlag = true;
+                MailHandler.Message = CurrentMessage;
+                Frame.Navigate(typeof(CreateMailPage));
             }
             else if (e.OriginalSource == AppBarButtonReplyMail)
             {
@@ -316,12 +318,47 @@ namespace ImapMail
             }
             else if (e.OriginalSource == AppBarButtonDeleteMail)
             {
-                Debug.WriteLine("Delete mail clicked");
+                bool userChoosedDelete = await DisplayDeleteDialog();
 
+                if (userChoosedDelete)
+                {
+                    bool success = MailHandler.DeleteMessage(CurrentMessage);
+
+                    if (success)
+                    {
+                        RefreshMail();
+                    }
+                }
             }
             else if (e.OriginalSource == AppBarButtonRefreshMail)
             {
                 RefreshMail();
+            }
+        }
+
+        /// <summary>
+        /// Shows a dialog for deleting a mail
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> DisplayDeleteDialog()
+        {
+            ContentDialog deleteDialog = new ContentDialog
+            {
+                Title = "Delete mail?",
+                Content = "Do you want to delete this mail?",
+                CloseButtonText = "Cancel",
+                PrimaryButtonText = "Delete"
+            };
+
+            ContentDialogResult result = await deleteDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -360,13 +397,7 @@ namespace ImapMail
                     MailHandler.attachedFiles.Clear();
                 }
             }
-
-            /*
-            if (MailHeaderList != null)
-                MailHeaderList.Clear();
-
-            if (AttachedFileList != null)
-                AttachedFileList.Clear();*/
+           
         }
 
     }

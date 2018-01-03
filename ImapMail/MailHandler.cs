@@ -9,6 +9,9 @@ using System.Collections.ObjectModel;
 using MailKit.Net.Smtp;
 using System.Globalization;
 using System.IO;
+using System.Threading;
+using MailKit.Search;
+using MimeKit.Utils;
 
 namespace ImapMail
 {
@@ -40,6 +43,7 @@ namespace ImapMail
 
         internal static MimeMessage Message { get; set; }
         internal static bool ReplyFlag { get; set; }
+        internal static bool ForwardFlag { get; set; }
 
         /// <summary>
         /// Logs in to imap mail server
@@ -100,7 +104,7 @@ namespace ImapMail
             if (LoggedIn)
             {
                 var inbox = client.Inbox;
-                inbox.Open(FolderAccess.ReadOnly);
+                inbox.Open(FolderAccess.ReadWrite);
 
                 //Debug.WriteLine("Total messages: {0}", inbox.Count);
 
@@ -114,7 +118,7 @@ namespace ImapMail
                 {
                     MailHeader mailHeader = ConvertMessageSummary(summary);
                     headerList.Add(mailHeader);
-                }
+                }              
             }
             else
             {
@@ -124,6 +128,8 @@ namespace ImapMail
                     GetMailHeaders();
                 }
             }
+
+
 
             return headerList;
         }
@@ -146,7 +152,7 @@ namespace ImapMail
             //to the fromString, otherwise add email address
             foreach (var from in fromList)
             {
-                if (from.Name == null || from.Name.Equals(""))
+                if (!string.IsNullOrEmpty(from.Name))
                 {
                     if (fromList.Count > 1)
                     {
@@ -199,13 +205,13 @@ namespace ImapMail
         {
             MimeMessage mail = null;
 
-            if (LoggedIn == true)
+            if (LoggedIn)
             {
                 var inbox = client.Inbox;
 
-                if (inbox.IsOpen == false)
+                if (!inbox.IsOpen)
                 {
-                    inbox.Open(FolderAccess.ReadOnly);
+                    inbox.Open(FolderAccess.ReadWrite);
                 }
 
                 mail = inbox.GetMessage(uid);
@@ -227,13 +233,16 @@ namespace ImapMail
         /// <param name="msg"></param>
         /// <param name="from"></param>
         /// <param name="to"></param>
+        /// <param name="cc"></param>
+        /// <param name="bcc"></param>
         /// <param name="subject"></param>
         /// <param name="bodyText"></param>
         /// <returns></returns>
-        public static bool SendMail(MimeMessage msg, string from, string to, string subject, string bodyText)
+        public static bool SendMail(MimeMessage msg, string from, string to, string cc, string bcc, string subject, string bodyText)
         {
             var message = new MimeMessage();
 
+            //If the message is a reply message
             if (ReplyFlag == true)
             {
                 //message.From and message.To needs to be cleared first
@@ -245,10 +254,26 @@ namespace ImapMail
 
                 message = msg;
             }
+            //If the message is a forwarded message
+            else if (ForwardFlag==true)
+            {              
+                msg.To.Add(new MailboxAddress(to));
+                message = msg;
+            }
+            //If standard mail message
             else
             {
                 message.From.Add(new MailboxAddress(from));
                 message.To.Add(new MailboxAddress(to));
+            }
+
+            if (!string.IsNullOrEmpty(cc))
+            {              
+                message.Cc.Add(new MailboxAddress(cc));
+            }
+            if (!string.IsNullOrEmpty(bcc))
+            {
+                message.Bcc.Add(new MailboxAddress(bcc));
             }
 
             message.Subject = subject;
@@ -386,6 +411,95 @@ namespace ImapMail
             }
 
             return replyMessage;
+        }
+
+        /// <summary>
+        /// Creates a message to be forwarded
+        /// </summary>
+        /// <param name="original"></param>
+        /// <returns></returns>
+        public static MimeMessage CreateForward(MimeMessage original)
+        {
+            var message = new MimeMessage();
+
+            var userMailbox = new MailboxAddress(UserEmail);
+            message.From.Add(userMailbox);           
+ 
+            //Sets the forwarded subject          
+            message.Subject = "Fwd: " + original.Subject;
+
+            //Quotes the original message text
+            using (var text = new StringWriter())
+            {
+                text.WriteLine();
+                text.WriteLine("-------- Original Message --------");
+                text.WriteLine("Subject: {0}", original.Subject);
+                text.WriteLine("Date: {0}", DateUtils.FormatDate(original.Date));
+                text.WriteLine("From: {0}", original.From);
+                text.WriteLine("To: {0}", original.To);
+                text.WriteLine();
+
+                //Writes the TextBody if it isn´t empty or null
+                if (!string.IsNullOrEmpty(original.TextBody))
+                {
+                    text.Write(original.TextBody);
+                }
+                //Writes the HtmlBody if it isn´t empty or null
+                else if (!string.IsNullOrEmpty(original.HtmlBody))
+                {
+                    text.WriteLine(original.HtmlBody);
+                }
+                else
+                {
+                    text.WriteLine();
+                }
+
+                message.Body = new TextPart("plain")
+                {
+                    Text = text.ToString()
+                };
+            }
+
+            return message;
+        }
+
+        /// <summary>
+        /// Deletes a specific mail
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static bool DeleteMessage(MimeMessage message)
+        {
+            if (Login())
+            {
+                try
+                {
+                    if (client.Inbox.IsOpen)
+                    {
+                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));
+                        Debug.WriteLine("uid: " + uid);
+                        client.Inbox.AddFlags(new UniqueId[] { uid[0] }, MessageFlags.Deleted, true, new CancellationToken());
+                        client.Inbox.Expunge();
+                    } 
+                    else
+                    {
+                        client.Inbox.Open(FolderAccess.ReadWrite);
+                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));
+                        Debug.WriteLine("uid: " + uid);
+                        client.Inbox.AddFlags(new UniqueId[] { uid[0] }, MessageFlags.Deleted, true, new CancellationToken());
+                        client.Inbox.Expunge();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                    return false;
+                }
+
+                return true;
+            }
+
+            return true;
         }
     }
 }

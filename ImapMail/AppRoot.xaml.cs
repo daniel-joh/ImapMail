@@ -65,11 +65,14 @@ namespace ImapMail
                 switch (args.InvokedItem)
                 {
                     case "Home":
+                        MailHandler.ReplyFlag = false;
+                        MailHandler.ForwardFlag = false;
                         ContentFrame.Navigate(typeof(MainPage));
                         break;
 
-                    case "Mail":                       
+                    case "Send Mail":                       
                         MailHandler.ReplyFlag = false;
+                        MailHandler.ForwardFlag = false;
                         ContentFrame.Navigate(typeof(CreateMailPage));                    
                         break;
                 }
@@ -89,10 +92,14 @@ namespace ImapMail
                 switch (item.Tag)
                 {
                     case "home":
+                        MailHandler.ReplyFlag = false;
+                        MailHandler.ForwardFlag = false;
                         ContentFrame.Navigate(typeof(MainPage));
                         break;
 
-                    case "Mail":                       
+                    case "mail":
+                        MailHandler.ReplyFlag = false;
+                        MailHandler.ForwardFlag = false;
                         ContentFrame.Navigate(typeof(CreateMailPage));
                         break;
                 }

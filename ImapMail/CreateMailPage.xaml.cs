@@ -92,6 +92,22 @@ namespace ImapMail
 
                 Message.Text = message.TextBody;
             }
+
+            //If the user has clicked Forward
+            if (MailHandler.ForwardFlag == true)
+            {
+                if (MailHandler.Message != null)
+                {
+                    MailHandler.Message = MailHandler.CreateForward(MailHandler.Message);
+                }            
+
+                var message = MailHandler.Message;        
+
+                Subject.Text = message.Subject;
+
+                Message.Text = message.TextBody;
+                
+            }
         }
 
         /// <summary>
@@ -116,7 +132,7 @@ namespace ImapMail
         /// </summary>
         private void HandleSendingMail()
         {
-            if (To.Text == null || To.Text.Equals(""))
+            if (!string.IsNullOrEmpty(To.Text))
             {
                 DisplayDialog("Missing information", "To field empty.");
                 To.Focus(FocusState.Programmatic);
@@ -125,13 +141,15 @@ namespace ImapMail
 
             bool success;
 
-            if (MailHandler.ReplyFlag == true)
+            //If the message is a reply message or a forwarded message
+            if (MailHandler.ReplyFlag == true || MailHandler.ForwardFlag==true)
             {
-                success = MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Subject.Text, Message.Text);
+                success = MailHandler.SendMail(MailHandler.Message, From.Text, To.Text, Cc.Text, Bcc.Text, Subject.Text, Message.Text);
             }
-            else
+            //Standard email send
+            else 
             {
-                success = MailHandler.SendMail(null, From.Text, To.Text, Subject.Text, Message.Text);
+                success = MailHandler.SendMail(null, From.Text, To.Text, Cc.Text, Bcc.Text, Subject.Text, Message.Text);
             }
 
             if (success)
@@ -227,6 +245,13 @@ namespace ImapMail
 
             ContentDialogResult result = await errorDialog.ShowAsync();
         }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {           
+            if (FileList!=null)
+                FileList.Clear();
+        }
+       
 
     }
 }
