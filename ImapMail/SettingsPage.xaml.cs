@@ -16,9 +16,8 @@ using Windows.UI.Xaml.Navigation;
 
 namespace ImapMail
 {
-
     public sealed partial class SettingsPage : Page
-    {
+    {        
         public SettingsPage()
         {
             this.InitializeComponent();
@@ -55,6 +54,7 @@ namespace ImapMail
             txtImapPassword.Password = (string)localSettings.Values["imapPassword"];
 
             string tempImapSsl = (string)localSettings.Values["imapSsl"];
+
             if (tempImapSsl.Equals("true"))
             {
                 checkImapSsl.IsChecked = true;
@@ -65,6 +65,7 @@ namespace ImapMail
             }
 
             string tempSmtpSsl = (string)localSettings.Values["smtpSsl"];
+
             if (tempSmtpSsl.Equals("true"))
             {
                 checkSmtpSsl.IsChecked = true;
@@ -75,6 +76,7 @@ namespace ImapMail
             }
 
             string tempSmtpAuth = (string)localSettings.Values["smtpAuth"];
+
             if (tempSmtpAuth.Equals("true"))
             {
                 checkSmtpAuth.IsChecked = true;
@@ -198,7 +200,6 @@ namespace ImapMail
 
             /* Sets MailHandler properties */
             MailHandler.UserEmail = txtUserEmail.Text;
-
             MailHandler.ImapHost = txtImapHost.Text;
 
             try
@@ -274,6 +275,9 @@ namespace ImapMail
             ContentDialogResult result = await saveSuccessDialog.ShowAsync();
         }
 
+        /// <summary>
+        /// Removes settings
+        /// </summary>
         public void RemoveSettings()
         {
             Windows.Storage.ApplicationDataContainer localSettings =
@@ -292,6 +296,6 @@ namespace ImapMail
             localSettings.Values.Remove("smtpPassword");
             localSettings.Values.Remove("smtpSsl");
 
-        }
+        }       
     }
 }

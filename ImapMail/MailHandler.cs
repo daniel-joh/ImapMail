@@ -15,38 +15,70 @@ using MimeKit.Utils;
 
 namespace ImapMail
 {
+    /// <summary>
+    /// Class that handles everything mail related
+    /// </summary>
     public class MailHandler
     {
+        //ImapClient 
         private static ImapClient client;
 
+        //Flag for logged in status. If true, user has logged in
         internal static bool LoggedIn { get; set; }
 
+        //The user´s email
         internal static string UserEmail { get; set; }
 
-        /* IMAP properties */
+        //IMAP host
         internal static string ImapHost { get; set; }
+
+        //IMAP port
         internal static int ImapPort { get; set; }
+
+        //Flag for IMAP SSL. If true, SSL has been set
         internal static bool ImapUseSsl { get; set; }
+
+        //Username for IMAP
         internal static string ImapUser { get; set; }
+
+        //Password for IMAP
         internal static string ImapPassword { get; set; }
 
-        /* SMTP properties */
+        //SMTP host
         internal static string SmtpHost { get; set; }
+
+        //SMTP port
         internal static int SmtpPort { get; set; }
+
+        //Flag for SMTP SSL. If true, SSL has been set
         internal static bool SmtpUseSsl { get; set; }
+
+        //Flag for SMTP authentication. If true, authentication is required
         internal static bool SmtpAuth { get; set; }
+
+        //Username for SMTP 
         internal static string SmtpUser { get; set; }
+
+        //Password for SMTP
         internal static string SmtpPassword { get; set; }
 
         //Dictionary for attached files
         internal static Dictionary<string, byte[]> attachedFiles { get; set; }
 
+        //Current message
         internal static MimeMessage Message { get; set; }
+
+        //Flag for reply status. If true, Message is a reply message
         internal static bool ReplyFlag { get; set; }
+
+        //Flag for forward status. If true, Message is a forwarded message
         internal static bool ForwardFlag { get; set; }
 
+        //Flag for mail search status. True if search for mail returned mail
+        internal static bool isMailSearchSuccess { get; set; }
+
         /// <summary>
-        /// Logs in to imap mail server
+        /// Logs in to IMAP mail server
         /// </summary>
         public static bool Login()
         {
@@ -54,10 +86,8 @@ namespace ImapMail
             {
                 client = new ImapClient();
 
-                if (client.IsConnected == false && client.IsAuthenticated == false)
-                {
-                    //client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
+                if (!client.IsConnected && !client.IsAuthenticated)
+                {                  
                     try
                     {
                         client.Connect(ImapHost, ImapPort, ImapUseSsl);
@@ -84,7 +114,7 @@ namespace ImapMail
         {
             if (client != null)
             {
-                if (client.IsConnected == true)
+                if (client.IsConnected)
                 {
                     client.Disconnect(true);
                     client = null;
@@ -96,8 +126,9 @@ namespace ImapMail
         /// <summary>
         /// Gets mail headers
         /// </summary>
+        /// <param name="searchTerm"></param>
         /// <returns></returns>
-        public static ObservableCollection<MailHeader> GetMailHeaders()
+        public static ObservableCollection<MailHeader> GetMailHeaders(string searchTerm)
         {
             ObservableCollection<MailHeader> headerList = new ObservableCollection<MailHeader>();
 
@@ -108,13 +139,55 @@ namespace ImapMail
 
                 //Debug.WriteLine("Total messages: {0}", inbox.Count);
 
-                var summaryItems = inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.UniqueId).ToList();
+                var orderBy = new[] { OrderBy.ReverseArrival };
 
-                //Sorts messagesummaries in reverse arrival order
-                var orderBy = new[] { MailKit.Search.OrderBy.ReverseArrival };
-                MessageSorter.Sort(summaryItems, orderBy);
+                List<IMessageSummary> msgList = null;
 
-                foreach (MessageSummary summary in summaryItems)
+                //If the searchTerm isnt null or empty, search for messages matching the searchterm and sort them
+                //in reverse arrival order
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    //Search query
+                    var query = (SearchQuery.SubjectContains(searchTerm)).Or(SearchQuery.BodyContains(searchTerm));
+
+                    //Searches the mail folder using the query
+                    var uidList = inbox.Search(query);
+                   
+                    if (uidList.Count != 0)
+                    {
+                        //Fetches the messagesummaries of uidList
+                        msgList = inbox.Fetch(uidList, MessageSummaryItems.Envelope | MessageSummaryItems.UniqueId).ToList();
+
+                        //Sorts msgList in reverse arrival sort order
+                        MessageSorter.Sort(msgList, orderBy);
+
+                        isMailSearchSuccess = true;
+                    }
+                    else
+                    {
+                        isMailSearchSuccess = false;        
+                        return null;
+                    }
+                }
+                //If the searchTerm is null or empty, fetch all messagesummaries and sort them in 
+                //reverse arrival order
+                else
+                {
+                    //Fetches all messagesummaries
+                    msgList = inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.UniqueId).ToList();
+
+                    if (msgList.Count != 0)
+                    {
+                        //Sorts msgList in reverse arrival sort order
+                        MessageSorter.Sort(msgList, orderBy);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }            
+
+                foreach (MessageSummary summary in msgList)
                 {
                     MailHeader mailHeader = ConvertMessageSummary(summary);
                     headerList.Add(mailHeader);
@@ -122,15 +195,11 @@ namespace ImapMail
             }
             else
             {
-
                 if (Login())
                 {
-                    GetMailHeaders();
+                    GetMailHeaders(searchTerm);
                 }
             }
-
-
-
             return headerList;
         }
 
@@ -152,7 +221,7 @@ namespace ImapMail
             //to the fromString, otherwise add email address
             foreach (var from in fromList)
             {
-                if (!string.IsNullOrEmpty(from.Name))
+                if (string.IsNullOrEmpty(from.Name))
                 {
                     if (fromList.Count > 1)
                     {
@@ -476,16 +545,14 @@ namespace ImapMail
                 {
                     if (client.Inbox.IsOpen)
                     {
-                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));
-                        Debug.WriteLine("uid: " + uid);
+                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));                    
                         client.Inbox.AddFlags(new UniqueId[] { uid[0] }, MessageFlags.Deleted, true, new CancellationToken());
                         client.Inbox.Expunge();
                     } 
                     else
                     {
                         client.Inbox.Open(FolderAccess.ReadWrite);
-                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));
-                        Debug.WriteLine("uid: " + uid);
+                        var uid = client.Inbox.Search(SearchQuery.HeaderContains("Message-Id", message.MessageId));                     
                         client.Inbox.AddFlags(new UniqueId[] { uid[0] }, MessageFlags.Deleted, true, new CancellationToken());
                         client.Inbox.Expunge();
                     }

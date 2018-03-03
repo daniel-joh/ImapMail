@@ -36,7 +36,6 @@ namespace ImapMail
             }
             else
                 ContentFrame.Navigate(typeof(MainPage));
-
         }
 
         private void NavView_Loaded(object sender, RoutedEventArgs e)
@@ -51,7 +50,6 @@ namespace ImapMail
                     break;
                 }
             }       
-
         }
 
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -104,7 +102,6 @@ namespace ImapMail
                         break;
                 }
             }
-        }
-     
+        } 
     }
 }

@@ -31,11 +31,15 @@ namespace ImapMail
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        ObservableCollection<MailHeader> MailHeaderList { get; set; }
-        MimeMessage CurrentMessage { get; set; }
+        private ObservableCollection<MailHeader> MailHeaderList { get; set; }
+        private MimeMessage CurrentMessage { get; set; }
 
-        ObservableCollection<AttachedFile> AttachedFileList { get; set; }
-        int SelectedIndex { get; set; }
+        private ObservableCollection<AttachedFile> AttachedFileList { get; set; }
+        private int SelectedIndex { get; set; }
+
+        private bool isGettingMailSuccess { get; set; }
+
+        private ContentDialog errorDialog;
 
         public MainPage()
         {
@@ -43,27 +47,56 @@ namespace ImapMail
 
             HelperUtils.LoadSettings();             //Loads mail settings from local settings to MailHandler
 
-            HandleMail();
+            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
 
-            AttachedFileList = new ObservableCollection<AttachedFile>();
+            isGettingMailSuccess = HandleMail();
 
-            this.AttachedFilesListView.ItemsSource = AttachedFileList;
+            //If fetching mail went OK
+            if (isGettingMailSuccess)
+            {
+                AttachedFileList = new ObservableCollection<AttachedFile>();
 
+                AttachedFilesListView.ItemsSource = AttachedFileList;
+            }
+
+        }
+
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            //If fetching mail failed, display error dialog
+            if (!isGettingMailSuccess)
+            {
+                DisplayErrorDialog("Mail error", "No mail found. Check your mail settings!");                           
+            }          
         }
 
         /// <summary>
         /// Logs in to mail server, gets mail summaries (headers) and sets the first mail´s content to the 
         /// webview and listview (attachments)
         /// </summary>
-        public void HandleMail()
+        /// <returns></returns>
+        public bool HandleMail()
         {
             MailHandler.Login();
-            MailHeaderList = MailHandler.GetMailHeaders();
-            Bindings.Update();
 
-            CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
-            HandleAttachmentsAsync(CurrentMessage);
-            SetContent(CurrentMessage);
+            ObservableCollection<MailHeader> tempMailList = MailHandler.GetMailHeaders(null);
+            if (tempMailList==null)
+            {              
+                return false;
+            }
+            else
+            {
+                MailHeaderList = tempMailList;
+
+                Bindings.Update();
+
+                CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
+                MailListView.SelectedIndex = 0;
+                HandleAttachmentsAsync(CurrentMessage);
+                SetContent(CurrentMessage);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -71,18 +104,31 @@ namespace ImapMail
         /// </summary>
         public void RefreshMail()
         {
-            if (MailHeaderList != null)
-                MailHeaderList.Clear();
-
             if (AttachedFileList != null)
                 AttachedFileList.Clear();
 
-            MailHeaderList = MailHandler.GetMailHeaders();
-            Bindings.Update();              //Updates the ListView data
+            ObservableCollection<MailHeader> tempMailList=MailHandler.GetMailHeaders(asb.Text);
 
-            CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
-            HandleAttachmentsAsync(CurrentMessage);
-            SetContent(CurrentMessage);
+            //If no mail was found on server, display error dialog
+            if (tempMailList==null)
+            {
+                DisplayErrorDialog("Mail error", "No mail found. Try again!");
+            }
+            //If mail was found, replace MailHeaderList with the list with new mail and update UI
+            else
+            {
+                if (MailHeaderList != null)
+                    MailHeaderList.Clear();
+
+                MailHeaderList = tempMailList;
+
+                Bindings.Update();              //Updates the ListView data
+
+                CurrentMessage = MailHandler.GetSpecificMail(MailHeaderList[0].UniqueId);
+                MailListView.SelectedIndex = 0;
+                HandleAttachmentsAsync(CurrentMessage);
+                SetContent(CurrentMessage);
+            }        
         }
 
         /// <summary>
@@ -95,7 +141,7 @@ namespace ImapMail
             AttachedFileList.Clear();
 
             MailHeader msg = (MailHeader)e.ClickedItem;
-
+            
             CurrentMessage = MailHandler.GetSpecificMail(msg.UniqueId);
             HandleAttachmentsAsync(CurrentMessage);
             SetContent(CurrentMessage);
@@ -243,15 +289,41 @@ namespace ImapMail
         /// <param name="operation"></param>
         /// <param name="message"></param>
         private async void DisplayErrorDialog(string title, string message)
-        {
-            ContentDialog errorDialog = new ContentDialog
+        {          
+            errorDialog = new ContentDialog
             {
                 Title = title,
                 Content = message,
                 CloseButtonText = "Ok"
             };
 
-            ContentDialogResult result = await errorDialog.ShowAsync();
+            errorDialog.Closed += ErrorDialog_Closed;
+            
+            ContentDialogResult result = await errorDialog.ShowAsync();          
+        }
+
+        /// <summary>
+        /// Handles the dialog closed event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        private void ErrorDialog_Closed(ContentDialog sender, ContentDialogClosedEventArgs args)
+        {
+            //If the user´s search for mail returned null
+            if (!MailHandler.isMailSearchSuccess && sender.Title.Equals("Mail error"))
+            {
+                errorDialog.Closed -= ErrorDialog_Closed;
+                errorDialog = null;
+                return;
+            }
+
+            //If no mail exists on server, navigate to SettingsPage so that the user can check settings
+            if (sender.Title.Equals("Mail error"))
+            {
+                errorDialog.Closed -= ErrorDialog_Closed;
+                errorDialog = null;
+                Frame.Navigate(typeof(SettingsPage));
+            }
         }
 
         /// <summary>
@@ -387,7 +459,10 @@ namespace ImapMail
             MessageFrom.Text = addressList[0].ToString();
         }
 
-        //If navigated to MainPage, clear the attached files list in MailHandler (used for sending files)
+        /// <summary>
+        /// If navigated to MainPage, clear the attached files list in MailHandler (used for sending files)
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             if (MailHandler.attachedFiles != null)
@@ -396,9 +471,13 @@ namespace ImapMail
                 {
                     MailHandler.attachedFiles.Clear();
                 }
-            }
-           
+            }        
         }
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            RefreshMail();
+        }     
 
     }
 }

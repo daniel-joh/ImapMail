@@ -25,9 +25,9 @@ namespace ImapMail
     /// </summary>
     public sealed partial class CreateMailPage : Page
     {
-        public ObservableCollection<AttachedFile> FileList { get; set; }
+        private ObservableCollection<AttachedFile> FileList { get; set; }
 
-        int SelectedIndex { get; set; }
+        private int SelectedIndex { get; set; }
 
         public CreateMailPage()
         {
@@ -105,8 +105,7 @@ namespace ImapMail
 
                 Subject.Text = message.Subject;
 
-                Message.Text = message.TextBody;
-                
+                Message.Text = message.TextBody;               
             }
         }
 
@@ -132,7 +131,7 @@ namespace ImapMail
         /// </summary>
         private void HandleSendingMail()
         {
-            if (!string.IsNullOrEmpty(To.Text))
+            if (To.Text.Equals("")) 
             {
                 DisplayDialog("Missing information", "To field empty.");
                 To.Focus(FocusState.Programmatic);
@@ -203,7 +202,7 @@ namespace ImapMail
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            this.AttachedFilesListView.ItemsSource = FileList;
+            this.AttachedFilesListView.ItemsSource = FileList;         
         }
 
         private void ListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -251,7 +250,5 @@ namespace ImapMail
             if (FileList!=null)
                 FileList.Clear();
         }
-       
-
     }
 }

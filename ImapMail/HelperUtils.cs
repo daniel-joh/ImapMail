@@ -63,6 +63,11 @@ namespace ImapMail
             MailHandler.SmtpAuth = bool.Parse(tempSmtpAuth);
         }
 
+        /// <summary>
+        /// Converts the attachment to a byte array
+        /// </summary>
+        /// <param name="attachment"></param>
+        /// <returns></returns>
         public static byte[] ConvertAttachmentToByteArray(MimeEntity attachment)
         {
             if (attachment != null)

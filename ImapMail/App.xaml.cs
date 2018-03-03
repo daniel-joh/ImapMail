@@ -78,17 +78,6 @@ namespace ImapMail
 
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
 
-                // Set active window colors
-                /*titleBar.ForegroundColor = Windows.UI.Colors.White;
-                titleBar.BackgroundColor = Windows.UI.Colors.Black;
-
-                titleBar.ButtonForegroundColor = Windows.UI.Colors.White;
-                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Black;
-                titleBar.ButtonHoverForegroundColor = Windows.UI.Colors.White;
-                titleBar.ButtonHoverBackgroundColor = Windows.UI.Colors.LightBlue;
-                titleBar.ButtonPressedForegroundColor = Windows.UI.Colors.Gray;
-                titleBar.ButtonPressedBackgroundColor = Windows.UI.Colors.LightGreen;*/
-
                 //draw into the title bar
                 CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
 

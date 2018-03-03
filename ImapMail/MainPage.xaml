@@ -31,10 +31,10 @@
 
                 </Grid.ColumnDefinitions>
 
-                <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <CommandBar Grid.Row="0" OverflowButtonVisibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
 
                     <CommandBar.PrimaryCommands>
-                        <AppBarButton HorizontalAlignment="Left" Name="AppBarButtonRefreshMail" Icon="Refresh" Label="Refresh mail" 
+                        <AppBarButton Margin="0,0,50,0" ToolTipService.ToolTip="Refresh mail" HorizontalAlignment="Left" Name="AppBarButtonRefreshMail" Icon="Refresh" Label="Refresh mail" 
                                       Click="AppBarButton_Click" ></AppBarButton>
                     </CommandBar.PrimaryCommands>
                     <CommandBar.Content>
@@ -44,17 +44,14 @@
                         QueryIcon="Find"                      
                         Margin="8"
                         MinWidth="200"
-                        HorizontalAlignment="Left" >
-                            <!--="asb_TextChanged"                   
-                        QuerySubmitted="asb_QuerySubmitted"
-                        SuggestionChosen="asb_SuggestionChosen"-->
+                        HorizontalAlignment="Left" QuerySubmitted="AutoSuggestBox_QuerySubmitted">
                         </AutoSuggestBox>
                     </CommandBar.Content>
                 </CommandBar>
 
                 <ListView Name="MailListView" Width="340" Height="Auto" ItemsSource="{x:Bind MailHeaderList, Mode=OneWay}" 
                            Margin="10,55,20,20" ItemClick="MailListView_ItemClicked" 
-                           IsItemClickEnabled="true"  SelectionMode="none"  
+                           IsItemClickEnabled="true"  SelectionMode="single"  
                            BorderThickness="0.5"  >
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:MailHeader">
@@ -64,7 +61,7 @@
                                     <RowDefinition Height="*"></RowDefinition>
                                     <RowDefinition Height="*"></RowDefinition>
                                 </Grid.RowDefinitions>
-                                <TextBlock Name="From" FontSize="18"  Grid.Row="0" Text="{x:Bind From}"  FontWeight="Bold" ></TextBlock>
+                                <TextBlock Name="From" FontSize="17"  Grid.Row="0" Text="{x:Bind From}"  FontWeight="Bold" TextTrimming="CharacterEllipsis" ></TextBlock>
                                 <TextBlock Name="Subject" FontSize="16" Grid.Row="1" Text="{x:Bind Subject}" TextTrimming="CharacterEllipsis"></TextBlock>
                                 <TextBlock Name="Date" FontSize="15"  Grid.Row="2" Text="{x:Bind Date}" ></TextBlock>
                             </Grid>
@@ -85,9 +82,13 @@
             </Grid.RowDefinitions>
 
             <CommandBar Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                <AppBarButton Name="AppBarButtonReplyMail" Icon="MailReply" Label="Reply to mail" Click="AppBarButton_Click"></AppBarButton>
-                <AppBarButton Name="AppBarButtonForwardMail" Icon="MailForward" Label="Forward mail" Click="AppBarButton_Click" ></AppBarButton>
-                <AppBarButton Name="AppBarButtonDeleteMail" Icon="Delete" Label="Delete mail" Click="AppBarButton_Click" ></AppBarButton>
+                <AppBarButton Name="AppBarButtonReplyMail" ToolTipService.ToolTip="Reply to mail" 
+                              Icon="MailReply" Label="Reply to mail" Click="AppBarButton_Click"></AppBarButton>
+                <AppBarButton Name="AppBarButtonForwardMail" Icon="MailForward" 
+                              ToolTipService.ToolTip="Forward mail" Label="Forward mail" 
+                              Click="AppBarButton_Click" ></AppBarButton>
+                <AppBarButton Name="AppBarButtonDeleteMail" Icon="Delete" Label="Delete mail" 
+                              ToolTipService.ToolTip="Delete mail" Click="AppBarButton_Click" ></AppBarButton>
             </CommandBar>
 
             <TextBlock  Grid.Row="1" FontSize="16" FontWeight="Bold" x:Name="MessageSubject" 
